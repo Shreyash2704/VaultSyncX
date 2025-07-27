@@ -1,71 +1,84 @@
 # VaultSyncX
 
-# React + TypeScript + Vite
+VaultSyncX is a cross-chain crypto portfolio dashboard built with **React**, **TypeScript**, and **Vite**.  
+It aggregates wallet balances, token holdings, and portfolio analytics across multiple EVM chains.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Features
 
-Currently, two official plugins are available:
+- **Multi-chain Portfolio Overview:**  
+  View your total crypto holdings across Ethereum, Arbitrum, Base, and more.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Chain-wise & Category-wise Breakdown:**  
+  See your balances grouped by chain and asset category (Tokens, Native, Protocols).
 
-## Expanding the ESLint configuration
+- **Aggregated Token Holdings:**  
+  Get a unified view of each token (e.g., ETH, USDC) across all supported chains.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **Token USD Value Calculation:**  
+  Real-time conversion of token balances to USD using price APIs.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+- **Wallet Connect:**  
+  Connect your wallet to view and manage your assets securely.
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+- **Light/Dark Theme Support:**  
+  UI adapts to your preferred theme using CSS variables and ThemeContext.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+## Tech Stack
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+- React + TypeScript + Vite
+- MobX (state management)
+- @tanstack/react-query (data fetching & caching)
+- Wagmi (wallet integration)
+- Tailwind CSS (styling)
+- Axios (API calls)
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Getting Started
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+1. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+
+2. **Start the development server:**
+   ```sh
+   npm run dev
+   ```
+
+3. **Connect your wallet and explore your portfolio!**
+
+## API Integration
+
+- **Portfolio API:**  
+  Fetches balances, categories, and chain data for a wallet address.
+
+- **Token Whitelist API:**  
+  Provides metadata for supported tokens on each chain.
+
+- **Balance API:**  
+  Returns token balances for a wallet on a specific chain.
+
+- **Price API:**  
+  Converts token balances to USD.
+
+## Folder Structure
+
+- `src/pages/` — Main dashboard and swap UI
+- `src/utils/` — API methods and aggregator functions
+- `src/context/` — Theme context and global providers
+- `src/store/` — MobX stores for app state
+
+## Customization
+
+- **Add more chains:**  
+  Update `chainIds` in `Dashboard.tsx` to support additional EVM networks.
+
+- **Styling:**  
+  Modify CSS variables in `ThemeContext.tsx` for custom themes.
+
+## License
+
+MIT
+
+---
+
+**VaultSyncX** — Your unified cross-chain portfolio manager.
