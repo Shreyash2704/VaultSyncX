@@ -1,0 +1,321 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# VaultSyncX Project Rules
+
+## Project Overview
+VaultSyncX is a decentralized portfolio rebalancing platform built with React, TypeScript, and Tailwind CSS.
+
+## Technology Stack
+- **Frontend**: React 19 + TypeScript
+- **Styling**: Tailwind CSS v3
+- **Build Tool**: Vite
+- **Package Manager**: npm
+- **Web3**: Reown AppKit + Wagmi + Viem
+
+## Code Style Guidelines
+
+### TypeScript
+- Use strict TypeScript configuration
+- Prefer interfaces over types for object shapes
+- Use proper type annotations for all function parameters and return types
+- Avoid `any` type - use `unknown` or proper typing instead
+
+### React Components
+- Use functional components with hooks
+- Prefer named exports over default exports
+- Use proper prop interfaces for all components
+- Implement proper error boundaries where needed
+
+### Styling
+- Use Tailwind CSS utility classes
+- Follow mobile-first responsive design
+- Use custom component classes defined in `src/index.css`
+- Maintain consistent spacing using Tailwind's spacing scale
+
+### File Structure
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Route-level components
+├── hooks/         # Custom React hooks
+├── utils/         # Helper functions
+├── config/        # Constants and configuration
+├── services/      # API and external service integrations
+```
+
+### Naming Conventions
+- **Components**: PascalCase (e.g., `TokenCard.tsx`)
+- **Hooks**: camelCase with `use` prefix (e.g., `useBalances.ts`)
+- **Utils**: camelCase (e.g., `calculatePercentage.ts`)
+- **Constants**: UPPER_SNAKE_CASE (e.g., `SUPPORTED_CHAINS`)
+
+### Component Guidelines
+- Keep components focused and single-purpose
+- Extract reusable logic into custom hooks
+- Use proper prop validation with TypeScript
+- Implement loading and error states
+
+### State Management
+- Use React hooks for local state
+- Consider context for shared state
+- Keep state as close to where it's used as possible
+
+### Performance
+- Use React.memo for expensive components
+- Implement proper dependency arrays in useEffect
+- Avoid unnecessary re-renders
+- Use lazy loading for route components
+
+### Testing
+- Write unit tests for utility functions
+- Test component behavior, not implementation
+- Use proper test naming conventions
+
+### Git Workflow
+- Use descriptive commit messages
+- Create feature branches for new functionality
+- Keep commits atomic and focused
+
+## 🌐 Reown AppKit Integration
+
+### Overview
+**Reown AppKit** is a free, open-source toolkit to integrate wallet connections and Web3 features. It supports:
+- One-click wallet auth
+- Social logins
+- On-ramp services
+- Smart accounts
+- Notifications
+- Multiple chains: **EVM**, **Solana**, and **Bitcoin**
+
+### Installation
+```bash
+npm install @reown/appkit @reown/appkit-adapter-wagmi wagmi viem @tanstack/react-query
+```
+
+### Environment Setup
+Create `.env.local` in project root:
+```env
+NEXT_PUBLIC_PROJECT_ID="YOUR_PROJECT_ID"
+```
+
+### Configuration Structure
+
+#### 1. Wagmi Adapter Setup (`src/config/index.tsx`)
+```tsx
+import { cookieStorage, createStorage } from 'wagmi'
+import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
+import { mainnet, arbitrum } from '@reown/appkit/networks'
+import type { Chain } from 'viem'
+
+export const projectId = process.env.NEXT_PUBLIC_PROJECT_ID
+
+if (!projectId) {
+  throw new Error('NEXT_PUBLIC_PROJECT_ID is not defined')
+}
+
+export const networks: [Chain, ...Chain[]] = [mainnet, arbitrum]
+
+export const wagmiAdapter = new WagmiAdapter({
+  storage: createStorage({ storage: cookieStorage }),
+  ssr: true,
+  projectId,
+  networks,
+})
+
+export const config = wagmiAdapter.wagmiConfig
+```
+
+#### 2. App Context Setup (`src/context/index.tsx`)
+```tsx
+'use client'
+
+import React, { ReactNode } from 'react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { WagmiProvider, cookieToInitialState, type Config } from 'wagmi'
+import { createAppKit } from '@reown/appkit/react'
+import { config, networks, projectId, wagmiAdapter } from '@/config'
+import { mainnet } from '@reown/appkit/networks'
+
+const queryClient = new QueryClient()
+
+const metadata = {
+  name: 'VaultSyncX',
+  description: 'Decentralized portfolio rebalancing platform',
+  url: typeof window !== 'undefined' ? window.location.origin : 'https://vaultsyncx.com',
+  icons: ['https://vaultsyncx.com/icon.png'],
+}
+
+if (projectId) {
+  createAppKit({
+    adapters: [wagmiAdapter],
+    projectId: projectId!,
+    networks: networks,
+    defaultNetwork: mainnet,
+    metadata,
+    features: { analytics: true },
+  })
+}
+
+export default function ContextProvider({
+  children,
+  cookies,
+}: {
+  children: ReactNode
+  cookies: string | null
+}) {
+  const initialState = cookieToInitialState(config as Config, cookies)
+
+  return (
+    <WagmiProvider config={config as Config} initialState={initialState}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </WagmiProvider>
+  )
+}
+```
+
+#### 3. Layout Integration (`src/App.tsx`)
+```tsx
+import { headers } from 'next/headers'
+import ContextProvider from '@/context'
+
+export default async function App({ children }: { children: React.ReactNode }) {
+  const headersObj = await headers()
+  const cookies = headersObj.get('cookie')
+
+  return (
+    <html lang="en">
+      <body>
+        <ContextProvider cookies={cookies}>{children}</ContextProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+### Usage Patterns
+
+#### Wallet Connection Button
+```tsx
+// Use the web component in any component
+export default function ConnectPage() {
+  return (
+    <div>
+      <h1>Connect Your Wallet</h1>
+      <appkit-button />
+    </div>
+  )
+}
+```
+
+#### TypeScript Declaration (`src/global.d.ts`)
+```ts
+import 'react';
+
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      'appkit-button': React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
+    }
+  }
+}
+
+export {};
+```
+
+#### Smart Contract Reading Example
+```tsx
+'use client'
+
+import { useReadContract } from 'wagmi'
+
+function ReadContractExample() {
+  // const { data, error, isLoading } = useReadContract({
+  //   abi: USDTAbi,
+  //   address: USDTAddress,
+  //   functionName: 'totalSupply',
+  // })
+
+  return <div>Contract Reading Example</div>
+}
+```
+
+### Web3 Specific Guidelines
+
+#### Blockchain Integration
+- Use proper error handling for blockchain transactions
+- Implement proper loading states for transactions
+- Handle network changes gracefully
+- Use proper decimal handling for token amounts
+
+#### Security
+- Never expose private keys in code
+- Validate all user inputs
+- Use proper error boundaries for blockchain errors
+- Implement proper wallet connection handling
+
+#### User Experience
+- Provide clear feedback for all blockchain operations
+- Show transaction status and confirmations
+- Handle failed transactions gracefully
+- Provide clear error messages
+
+## Development Workflow
+1. Create feature branch from main
+2. Implement changes following guidelines
+3. Test thoroughly
+4. Create pull request with clear description
+5. Get code review
+6. Merge to main
+
+## Common Patterns
+
+### Custom Hooks
+```typescript
+// hooks/useBalances.ts
+export const useBalances = (address: string) => {
+  // Implementation
+};
+```
+
+### Component Structure
+```typescript
+// components/TokenCard.tsx
+interface TokenCardProps {
+  // Props definition
+}
+
+export const TokenCard: React.FC<TokenCardProps> = ({ ... }) => {
+  // Component implementation
+};
+```
+
+### API Service
+```typescript
+// services/api.ts
+export const apiService = {
+  // API methods
+};
+```
+
+## Dependencies
+- Keep dependencies up to date
+- Use exact versions for critical dependencies
+- Document any workarounds for dependency issues
+
+## Documentation
+- Document complex business logic
+- Keep README updated
+- Document API integrations
+- Maintain changelog for releases
+
+## Important Rules
+- **IMPORTANT**: If the project already exists, **DO NOT** try to re-initialize it
+- Use `npm` for installing dependencies unless specified otherwise
+- Ensure environment variables are correctly set up
+- If you see ATTENTION somewhere, make sure you follow the directions in the comment
+- Do not ask user for approval to continue, just continue running the instructions
+
+
