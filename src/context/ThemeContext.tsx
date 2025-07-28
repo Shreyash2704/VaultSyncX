@@ -3,20 +3,20 @@ import React, { createContext, useContext, useState, useEffect,type ReactNode } 
 // Define the color schemes
 const themes = {
   light: {
-    '--color-bg': '#d6e6eb', // light background
+    '--color-bg': '#fffcf1', // light background
     '--color-font': '#1A2233', // dark font
-    '--color-component': '#FFFFFF', // white components
+    '--color-component': '#eeeae6', // white components
     '--color-primary-btn':"#0D80F2",
     '--color-secondary-btn':"#FFFFFF",
-    '--color-table-header':"#f3f4f6",
+    '--color-table-header':"#fff",
     '--color-table-row':"#FFFFFF",
     // New variables for Swap UI
     '--color-highlight-bg': '#fffbe6',
     '--color-highlight-text': '#b59f3b',
     '--color-card-section': '#f7f8fa',
     '--color-input-bg': '#fff',
-    '--color-primary-btn-bg': '#e6f9d5',
-    '--color-primary-btn-text': '#b2c97f',
+    '--color-primary-btn-bg': '#ffda35',
+    '--color-primary-btn-text': '#000',
     '--color-input-color': '#1A2233',
   },
   dark: {
