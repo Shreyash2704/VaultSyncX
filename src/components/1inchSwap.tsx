@@ -1,9 +1,10 @@
 // hooks/useFusionPlusSwap.ts
-import { type Address } from 'viem';
+import { type Address, type ByteArray } from 'viem';
 // Example React component for Fusion+ (Cross-Chain)
 import React, { useState } from 'react';
 import { useAccount, useConnect, useDisconnect,useSignTypedData } from 'wagmi';
 import { injected } from 'wagmi/connectors';
+import { keccak256 } from 'viem';
 
 const FUSION_PLUS_API_BASE = 'https://api.1inch.dev/fusion-plus';
 const API_KEY = import.meta.env.VITE_1INCH_API_KEY;
@@ -30,7 +31,7 @@ interface Quote {
 }
 
 interface HashLockData {
-  hashLock: string;
+  hashLock: `0x${string}` | ByteArray;
   secrets: string[];
   secretHashes: string[];
 }
@@ -69,17 +70,18 @@ export const useFusionPlusSwap = () => {
   const [currentStep, setCurrentStep] = useState<string>('idle');
 
   // Generate random secret for atomic swaps
-  const generateSecret = (): string => {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return '0x' + Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-  };
+  const generateSecret = (): `0x${string}` | ByteArray => {
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  // Return as ByteArray for compatibility with viem/ethers
+  return array as ByteArray;
+};
 
   // Hash secret using keccak256 (simplified version)
-  const hashSecret = (secret: string): string => {
+  const hashSecret = (secret: `0x${string}` | ByteArray): string => {
     // In a real implementation, you'd use keccak256 from ethers or viem
     // This is a placeholder - you should use proper keccak256 hashing
-    return secret; // Replace with actual hashing
+    return keccak256(secret); // Replace with actual hashing
   };
 
   // Step 1: Get Cross-Chain Quote

@@ -30,7 +30,8 @@ const networks = [
     ...arbitrum,
     ...ChainConfig.arbitrum
   },{
-    ...base
+    ...base,
+    ...ChainConfig.base
   }
 ]
 
