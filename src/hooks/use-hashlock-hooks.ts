@@ -1,7 +1,5 @@
-import { keccak256 } from 'viem';
+import { keccak256, type ByteArray } from 'viem';
 import type { HashLockData } from '../types/chain-type';
-
-
 
 // Helper: Generate a random secret as hex string
 const generateSecret = (): `0x${string}` => {
@@ -60,7 +58,7 @@ const generateSecrets = (secretsCount: number): HashLockData => {
   };
 };
 
-export const useCrosschainHooks = () => ({
+export const useHashLockHook = () => ({
   generateSecrets,
   getHashLock,
   hashSecret,

@@ -9,9 +9,9 @@ import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
 const navLinks = [
   { name: 'Dashboard', to: '/' },
   { name: 'Swap', to: '/swap' },
-  { name: 'Bridge', to: '/bridge' },
-  { name: 'Stake', to: '/stake' },
-  { name: 'NFTs', to: '/nfts' },
+  { name: 'Aggregator', to: '/aggregator' },
+  // { name: 'Stake', to: '/stake' },
+  // { name: 'NFTs', to: '/nfts' },
 ];
 
 const Navbar: React.FC = () => {

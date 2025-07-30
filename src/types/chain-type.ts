@@ -36,3 +36,4 @@ export type HashLockData = {
   secrets: (`0x${string}`)[];
   secretHashes: (`0x${string}`)[];
 };
+

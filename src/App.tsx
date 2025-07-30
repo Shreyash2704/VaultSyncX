@@ -5,6 +5,7 @@ import { WalletProvider } from './context/WalletContext';
 import { AppKitProvider } from './context/AppkitContext';
 import Swap from './pages/Swap';
 import Navbar from './components/Navbar';
+import Aggregator from './pages/Aggregator';
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/swap" element={<Swap />} />
+          <Route path="/aggregator" element={<Aggregator />} />
           {/* Add more routes here as you create more pages */}
         </Routes>
       </div>

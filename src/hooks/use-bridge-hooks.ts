@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useAccount, useChains, useSignMessage, useSwitchChain } from "wagmi";
+import { useAccount, useChains, useSignTypedData, useSwitchChain } from "wagmi";
 import {
   PresetEnum,
   type ChainOption,
@@ -13,11 +13,14 @@ import {
   buildOrderByQuote,
   getBalance,
   getQuote,
+  getQuoteData,
+  getSupportedTokens,
   getTokenPrice,
   submitOrder,
+  submitOrderSecret,
 } from "../utils/api-methods";
 import { useQuery } from "@tanstack/react-query";
-import { useCrosschainHooks } from "./use-crosschain-hooks";
+import { useHashLockHook } from "./use-hashlock-hooks";
 
 export const useBridgeHooks = () => {
   const chains = useChains();
@@ -35,27 +38,67 @@ export const useBridgeHooks = () => {
   const [recipient, setRecipient] = useState("");
   const debouncedAmount = useDebounceHook(fromAmount, 1000);
   const [tokenPriceUsd, settokenPriceUsd] = useState("");
+  const [toTokenPriceUsd, settoTokenPriceUsd] = useState("")
   const [balance, setBalance] = useState("");
+  const [quoteError, setquoteError] = useState("")
 
-  const {signMessageAsync} = useSignMessage()
-  type QuotePreset = {
-    secretsCount: number;
-    // add other properties if needed
-  };
+  const { signTypedDataAsync } = useSignTypedData();
 
-  type QuoteData = {
-    presets: Record<string, QuotePreset>;
-    // add other properties if needed
-  };
+ 
 
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
+  const [quoteData, setQuoteData] = useState<any>(null);
 
   const { generateSecrets, getHashLock, hashSecret, getMerkleRoot } =
-    useCrosschainHooks();
+    useHashLockHook();
 
   const { address } = useAccount();
 
-  // Memoized options for dropdowns
+   // Fetch tokens for fromChain
+  const {
+    data: fromTokensData,
+    isLoading: fromTokensLoading,
+    error: fromTokensError,
+  } = useQuery({
+    queryKey: ["supportedTokens", fromChain?.id],
+    queryFn: async () => {
+      if (!fromChain?.id) return {};
+      return await getSupportedTokens(fromChain.id);
+    },
+    enabled: !!fromChain?.id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+   // Fetch tokens for toChain
+  const {
+    data: toTokensData,
+    isLoading: toTokensLoading,
+    error: toTokensError,
+  } = useQuery({
+    queryKey: ["supportedTokens", toChain?.id],
+    queryFn: async () => {
+      return
+      // if (!toChain?.id) return {};
+      // return await getSupportedTokens(toChain.id);
+    },
+    enabled: !!toChain?.id,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const {
+    data: balanceData,
+    isLoading: balanceLoading,
+    refetch: refetchBalance,
+  } = useQuery({
+    queryKey: ["balance", address, fromChain?.id],
+    queryFn: async () => {
+      return
+      if (!address || !fromChain?.id) return;
+      // const balance = await getBalance(address, fromChain.id);
+      // return balance;
+    },
+    enabled: !!address && !!fromChain?.id,
+  });
+
   const fromChainOptions = useMemo(() => mutableChains, [mutableChains]);
   const toChainOptions = useMemo(
     () => mutableChains.filter((chain) => chain.id !== fromChain?.id),
@@ -63,32 +106,48 @@ export const useBridgeHooks = () => {
   );
   const fromTokenOptions = useMemo(
     () => fromChain?.tokens,
-    // Array.isArray(fromChain?.tokens)
-    //   ? fromChain.tokens.filter((token) => token.address !== toToken?.address)
-    //   : [],
     [fromChain, toToken]
   );
   const toTokenOptions = useMemo(
     () => toChain?.tokens,
-    // Array.isArray(toChain?.tokens)
-    //   ? toChain.tokens.filter((token) => token.address !== fromToken?.address)
-    //   : [],
     [toChain, fromToken]
   );
+
+   // Convert API token objects to arrays for easier use
+  // const fromTokenOptions = useMemo(() => {
+  //   if (!fromTokensData) return [];
+  //   return Object.values(fromTokensData) as Token[];
+  // }, [fromTokensData]);
+
+  // const toTokenOptions = useMemo(() => {
+  //   if (!toTokensData) return [];
+  //   return Object.values(toTokensData) as Token[];
+  // }, [toTokensData]);
 
   // Chain selection handler
   const handleOptionChange = useCallback(
     (chain: ChainOption | null, source: string) => {
       if (source === "from") {
         setFromChain(chain);
+        setFromToken(null);
         if (chain && toChain && chain.id === toChain.id) setToChain(null);
       } else {
         setToChain(chain);
+        setToToken(null);
         if (chain && fromChain && chain.id === fromChain.id) setFromChain(null);
       }
     },
     [fromChain, toChain]
   );
+
+  // Token selection handlers
+  const handleFromTokenChange = useCallback((token: Token | null) => {
+    setFromToken(token);
+  }, []);
+
+  const handleToTokenChange = useCallback((token: Token | null) => {
+    setToToken(token);
+  }, []);
   // Fetch quote
   const fetchQuote = useCallback(async () => {
     if (
@@ -97,7 +156,7 @@ export const useBridgeHooks = () => {
       !fromToken ||
       !toToken ||
       !address ||
-      !fromAmount
+      !debouncedAmount
     )
       return;
     const data = {
@@ -105,51 +164,37 @@ export const useBridgeHooks = () => {
       dstChain: toChain.id,
       srcTokenAddress: fromToken.address,
       dstTokenAddress: toToken.address,
-      amount: parseTokenAmount(fromAmount, fromToken.decimals),
+      amount: parseTokenAmount(debouncedAmount, fromToken.decimals),
       walletAddress: address,
-      enableEstimate: false,
+      enableEstimate: true,
     };
     try {
+      setquoteError("");
       const res = await getQuote(data);
-      setQuoteData(res);
-      setToAmount(formatTokenAmount(res.dstTokenAmount, toToken.decimals, 4));
-      console.log(
-        "res data",
-        res.dstTokenAmount,
-        formatTokenAmount(res.dstTokenAmount, toToken.decimals, 4)
-      );
+
+      if(res?.status === "success"){
+        setQuoteData(res.data);
+        setToAmount(formatTokenAmount(res.data.dstTokenAmount, toToken.decimals, 4));
+      }
+      if(res?.status === "error"){
+        setquoteError(res.data.description);
+        setToAmount("");
+      }
     } catch (error) {
       setToAmount("");
-      console.error("Quote fetch error:", error);
+      setquoteError("Something went wrong while fetching quote");
+      console.log("Quote fetch error:", error);
     }
-  }, [fromChain, toChain, fromToken, toToken, address, fromAmount]);
+  }, [fromChain, toChain, fromToken, toToken, address, debouncedAmount]);
 
-  useEffect(() => {
-    if (!fromToken) return;
-    const setPrice = async () => {
-      const price = await getTokenPrice(fromToken?.address);
-      settokenPriceUsd(price[fromToken.address]);
-    };
-    setPrice();
-  }, [fromToken]);
 
-  useEffect(() => {
-    fetchQuote();
-  }, [fromChain, toChain, fromAmount, fromToken, toToken, address]);
-  const signOrderMessage = async (order: Record<string, any>): Promise<string> => {
-  // Convert the order object to a string message (you may need to use EIP-712 for production)
-  const message = JSON.stringify(order);
+  const signOrderMessage = async (typedData: any): Promise<string> => {
+    if (!address) throw new Error("Wallet not connected");
 
-  if (!address) throw new Error("Wallet not connected");
+    const signature = await signTypedDataAsync(typedData);
 
-  // Sign the message
-  const signature = await signMessageAsync({
-    message,
-    account: address,
-  });
-
-  return signature;
-};
+    return signature;
+  };
 
   const handleSwap = async () => {
     const preset = PresetEnum.fast;
@@ -162,19 +207,26 @@ export const useBridgeHooks = () => {
       dstChain: toChain?.id.toString() || "8453",
       srcTokenAddress: fromToken?.address || "",
       dstTokenAddress: toToken?.address || "",
-      amount: parseTokenAmount(fromAmount, fromToken?.decimals || 18).toString(),
+      amount: parseTokenAmount(debouncedAmount, fromToken?.decimals || 18).toString(),
       walletAddress: address || "",
     };
+    // Build order using quote data
     const order = await buildOrderByQuote(quoteData, params, hashlockData.secrets);
 
-    
 
-    const signature = await signOrderMessage(order?.typedData?.message);
+
+    const signature = await signOrderMessage(order?.typedData);
     console.log("Order signature:", signature);
+    // Conditionally include secretHashes based on secretsCount
+    const secretsCount = quoteData?.presets[preset]?.secretsCount ?? 1;
+    const secretHashesToSubmit = secretsCount > 1 ? hashlockData.secretHashes : undefined;
 
-    const submitedOrder = await submitOrder(order?.typedData?.message, params, hashlockData.secretHashes, signature,order.extension);
+    const submitedOrder = await submitOrder(order?.typedData?.message, params, secretHashesToSubmit, signature, order.extension, quoteData?.quoteId);
 
     console.log("Order submitted:", submitedOrder);
+
+    const submitSecret = await submitOrderSecret(hashlockData.secrets[0],order.orderHash);
+    console.log("Secret submitted:", submitSecret);
   };
 
   // Placeholder icons (replace with SVGs or images as needed)
@@ -195,16 +247,30 @@ export const useBridgeHooks = () => {
   // USD value calculation
   const usdValue = useMemo(
     () =>
-      fromAmount && tokenPriceUsd
-        ? (parseFloat(fromAmount) * parseFloat(tokenPriceUsd)).toLocaleString(
-            undefined,
-            {
-              style: "currency",
-              currency: "USD",
-            }
-          )
+      debouncedAmount && tokenPriceUsd
+        ? (parseFloat(debouncedAmount) * parseFloat(tokenPriceUsd)).toLocaleString(
+          undefined,
+          {
+            style: "currency",
+            currency: "USD",
+          }
+        )
         : "$0.00",
-    [fromAmount, tokenPriceUsd]
+    [debouncedAmount, tokenPriceUsd]
+  );
+
+  const swappedUsdValue = useMemo(
+    () =>
+      toAmount && toTokenPriceUsd
+        ? (parseFloat(toAmount) * parseFloat(toTokenPriceUsd ?? 1)).toLocaleString(
+          undefined,
+          {
+            style: "currency",
+            currency: "USD",
+          }
+        )
+        : `$${toAmount}`,
+    [toAmount, toTokenPriceUsd]
   );
 
   const handleChainSwitch = async (chainId: number) => {
@@ -217,19 +283,29 @@ export const useBridgeHooks = () => {
     handleChainSwitch(fromChain?.id || 1);
   }, [fromChain]);
 
-  const {
-    data: balanceData,
-    isLoading: balanceLoading,
-    refetch: refetchBalance,
-  } = useQuery({
-    queryKey: ["balance", address, fromChain?.id],
-    queryFn: async () => {
-      if (!address || !fromChain?.id) return;
-      const balance = await getBalance(address, fromChain.id);
-      return balance;
-    },
-    enabled: !!address && !!fromChain?.id,
-  });
+  useEffect(() => {
+    if (!fromToken) return;
+    const setPrice = async () => {
+      const price = await getTokenPrice(fromToken?.address);
+      settokenPriceUsd(price[fromToken.address]);
+    };
+    setPrice();
+  }, [fromToken]);
+
+  useEffect(() => {
+    if (!toToken) return;
+    const setPrice = async () => {
+      const price = await getTokenPrice(toToken?.address);
+      settoTokenPriceUsd(price[toToken.address]);
+    };
+    setPrice();
+  }, [toToken]);
+
+  useEffect(() => {
+    fetchQuote();
+  }, [fromChain, toChain, debouncedAmount, fromToken, toToken, address]);
+
+  
 
   return {
     fromChain,
@@ -257,5 +333,12 @@ export const useBridgeHooks = () => {
     usdValue,
     handleChainSwitch,
     balanceData,
+    quoteError,
+    swappedUsdValue,
+    handleFromTokenChange,
+    handleToTokenChange,
+    fromTokensLoading, // Loading states for UI
+    toTokensLoading,
+    fromTokensError, // Error states for UI
   };
 };

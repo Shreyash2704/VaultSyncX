@@ -64,5 +64,27 @@
         "decimals": 6
       }
     ]
+    },
+    "polygon": {
+      "tokens": [
+        {
+          "address": "0x0000000000000000000000000000000000000000",
+          "symbol": "MATIC",
+          "name": "Polygon",
+          "decimals": 6
+        },
+        {
+          "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+          "symbol": "USDC",
+          "name": "USD Coin",
+          "decimals": 6
+        },
+        {
+          "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+          "symbol": "USDT",
+          "name": "Tether USD",
+          "decimals": 6
+        }
+      ]
     }
   }

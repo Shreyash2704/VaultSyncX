@@ -46,8 +46,3 @@ export async function aggregatorToken(address: string | undefined, chainIds: num
   // Convert map to array and filter out zero balances (shouldn't be needed, but for safety)
   return Object.values(tokenMap).filter(token => token.balance > 0);
 }
-
-// Usage example:
-// const tokens = await aggregatorToken("0xYourWalletAddress", [1, 8453, 42161]);
-// console.log(tokens);
-// Output: [{address: '0x...', symbol: 'ETH', balance: 160, ...}, ...]

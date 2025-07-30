@@ -1,7 +1,7 @@
 import { createAppKit } from '@reown/appkit/react'
 
 import { WagmiProvider } from 'wagmi'
-import { arbitrum, mainnet, base } from '@reown/appkit/networks'
+import { arbitrum, mainnet, base, polygon, type AppKitNetwork } from '@reown/appkit/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import ChainConfig from '../config/chain-config.json'
@@ -20,19 +20,24 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
-// 3. Set the networks
-const networks = [
+
+const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   {
     ...mainnet,
     ...ChainConfig.ethereum
-  }, 
+  } as AppKitNetwork, 
   {
     ...arbitrum,
     ...ChainConfig.arbitrum
-  },{
+  } as AppKitNetwork,
+  {
     ...base,
     ...ChainConfig.base
-  }
+  } as AppKitNetwork,
+  {
+    ...polygon,
+    ...ChainConfig.polygon
+  } as AppKitNetwork
 ]
 
 // 4. Create Wagmi Adapter
@@ -53,7 +58,7 @@ createAppKit({
   }
 })
 
-export function AppKitProvider({ children }) {
+export function AppKitProvider({ children }: { children: React.ReactNode }) {
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig}>
       <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

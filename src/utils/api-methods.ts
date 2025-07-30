@@ -25,14 +25,47 @@ export const getQuote = async(paramsData:QuoteDataType) =>{
           indexes: null,
         },
       };
+  
 
       try {
         const response = await axios.get(url, config);
         console.log(response.data);
-        return response.data
+        return {
+            status: "success",
+            data:response.data
+          }
       } catch (error) {
         console.error(error);
+        if(axios.isAxiosError(error)) {
+          console.error("Axios error:", error.response?.data);
+          return {
+            status: "error",
+            data:error.response?.data
+          }
+        }
       }
+}
+
+export const getQuoteData = async(param:any,data:any) =>{
+   const url = "/api/fusion-plus/quoter/v1.0/quote/receive";
+
+  const config = {
+    headers: {
+      Authorization: "Bearer UcuxFW4Sm4mVi1rr6bKxOusqwxfQLTzt",
+    },
+    params: param,
+    paramsSerializer: {
+      indexes: null,
+    },
+  };
+  const body = data
+
+  try {
+    const response = await axios.post(url, body, config);
+    console.log(response.data);
+  } catch (error) {
+    console.error(error);
+  }
 }
 
 export const getTokenPrice = async(token:string) =>{
@@ -230,7 +263,7 @@ export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretH
   }
 }
 
-export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashList:any[],signature:string,extension:string) =>{
+export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashList:`0x${string}`[] | undefined,signature:string,extension:string,quoteId:string) =>{
   const url = "/api/fusion-plus/relayer/v1.0/submit";
 
   const config = {
@@ -244,10 +277,10 @@ export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashLis
   };
   const body = {
     order: Order,
-    srcChainId: params.srcChain,
+    srcChainId: Number(params.srcChain),
     signature: signature,
     extension: extension,
-    quoteId: "",
+    quoteId: quoteId,
     secretHashes: secretHashList,
   };
 
@@ -258,3 +291,140 @@ export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashLis
     console.error(error);
   }
 }
+
+export const submitOrderSecret = async(secret:string, orderHash:string) =>{
+    const url = "https://api.1inch.dev/fusion-plus/relayer/v1.0/submit/secret";
+
+    const config = {
+      headers: {
+        Authorization: "Bearer UcuxFW4Sm4mVi1rr6bKxOusqwxfQLTzt",
+      },
+      params: {},
+      paramsSerializer: {
+        indexes: null,
+      },
+    };
+    const body = {
+      secret: secret,
+      orderHash: orderHash,
+    };
+
+    try {
+      const response = await axios.post(url, body, config);
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+}
+
+export const getSupportedTokens = async (chainId: number) => {
+  const url = `/api/token/v1.2/${chainId}`;
+  
+   const config = {
+    headers: {
+      Authorization: "Bearer UcuxFW4Sm4mVi1rr6bKxOusqwxfQLTzt",
+    },
+    params: {
+      provider: "1inch",
+      country: "US",
+    },
+    paramsSerializer: {
+      indexes: null,
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const getTokenChart = async (chainId: number, tokenAddress: string, period: string = '24H') => {
+  const url = `/api/charts/v1.0/${chainId}/chart/${tokenAddress}/line`;
+  
+ 
+  const config = {
+    headers: {
+      Authorization: "Bearer UcuxFW4Sm4mVi1rr6bKxOusqwxfQLTzt",
+    },
+    params: {},
+    paramsSerializer: {
+      indexes: null,
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+export const getTokenCandleChart = async (chainId: number, tokenAddress: string, period: string = '24H') => {
+  const url = `/api/charts/v1.0/${chainId}/chart/${tokenAddress}/candle`;
+  
+  const config = {
+    headers: {
+      Authorization: `Bearer ${apikey}`,
+    },
+    params: { period }
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching candle chart:', error);
+    throw error;
+  }
+};
+
+export const getTokenPairChart = async (
+  chainId: number, 
+  token0Address: string, 
+  token1Address: string, 
+  period: string = '24H'
+) => {
+  const url = `/api/charts/v1.0/chart/line/${token0Address}/${token1Address}/${period}/${chainId}`;
+  
+  const config = {
+    headers: {
+      Authorization: `Bearer ${apikey}`,
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching token pair chart:', error);
+    throw error;
+  }
+};
+
+export const getTokenUSDChart = async (
+  chainId: number, 
+  tokenAddress: string, 
+  period: string = '24H'
+) => {
+  // Common USDC addresses per chain
+  const usdcAddresses = {
+    1: '0xA0b86a33E6441025D94c91e1C5C4dF8A5e9Fa56a', // Ethereum
+    137: '0x2791Bca1f2de4661ED88A30C9b3c4e24HD55C0432', // Polygon
+    42161: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', // Arbitrum
+    8453: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913', // Base
+  };
+
+  const usdcAddress = usdcAddresses[chainId as keyof typeof usdcAddresses];
+  
+  if (!usdcAddress) {
+    throw new Error(`USDC address not found for chain ${chainId}`);
+  }
+
+  return getTokenPairChart(chainId, tokenAddress, usdcAddress, period);
+};

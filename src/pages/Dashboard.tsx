@@ -8,6 +8,9 @@ import { useAccount } from 'wagmi';
 import { getAggregatedPortfolio } from '../utils/portfolio-aggregator';
 import { aggregatorToken } from '../utils/token-aggregator';
 import { tokenBalanceToUSD } from '../utils/utility';
+import { useUserBalances } from '../hooks/use-user-balances';
+import { AiFillWallet } from 'react-icons/ai';
+import { FiCopy, FiExternalLink, FiRefreshCw } from 'react-icons/fi';
 
 
 declare global {
@@ -20,6 +23,30 @@ declare global {
 
 export {};
 
+function TokenUSDValue({ token }: { token: any }) {
+  const [usd, setUsd] = useState<number | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    tokenBalanceToUSD(token.address, token.balance, token.decimals)
+      .then(val => { if (mounted) setUsd(val); });
+    return () => { mounted = false; };
+  }, [token.address, token.balance, token.decimals]);
+
+  return (
+    <span>
+      {usd !== null ? `$${usd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '...'}
+    </span>
+  );
+}
+
+const SUPPORTED_CHAINS = [
+  { id: 1, name: 'Ethereum', symbol: 'ETH' },
+  { id: 137, name: 'Polygon', symbol: 'MATIC' },
+  { id: 42161, name: 'Arbitrum', symbol: 'ARB' },
+  { id: 8453, name: 'Base', symbol: 'BASE' },
+];
+
 const Dashboard: React.FC = () => {
   // const { walletConnected, loading, connectWallet } = useContext(WalletContext);
   const { open, close } = useAppKit();
@@ -29,17 +56,14 @@ const Dashboard: React.FC = () => {
 
   
   const [fetchingData, setfetchingData] = useState(false)
-
-  // const {
-  //   data: portfolioData,
-  //   isLoading: portfolioLoading,
-  //   error: portfolioError,
-  //   refetch: refetchPortfolio,
-  // } = useQuery({
-  //   queryKey: ['portfolio', address],
-  //   queryFn: async() => getPortfolio(address,chain?.id),
-  //   enabled: !!address && isConnected,
-  // });
+    const {
+      balances,
+      loading,
+      error:tokenBalanceError,
+      selectedChain,
+      setSelectedChain,
+    } = useUserBalances();
+    console.log("User Balances:", balances);
 
   
 
@@ -67,7 +91,35 @@ const {
   enabled: !!address && isConnected,
   staleTime: 60 * 1000, // cache for 1 minute
 });
+const [copiedAddress, setCopiedAddress] = useState<string>('');
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedAddress(text);
+      setTimeout(() => setCopiedAddress(''), 2000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
+
+  const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getChainName = (chainId: number) => {
+    return SUPPORTED_CHAINS.find(chain => chain.id === chainId)?.name || 'Unknown';
+  };
+
+  const getExplorerUrl = (chainId: number, tokenAddress: string) => {
+    const explorers = {
+      1: 'https://etherscan.io',
+      137: 'https://polygonscan.com',
+      42161: 'https://arbiscan.io',
+      8453: 'https://basescan.org'
+    };
+    return `${explorers[chainId as keyof typeof explorers] || 'https://etherscan.io'}/token/${tokenAddress}`;
+  };
 
 console.log("Aggregated Portfolio:", aggregatedPortfolio);
 console.log("Aggregated Tokens:", aggregatedTokens);
@@ -196,6 +248,142 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
           </div>
         )}
 
+        
+                {/* Controls */}
+                <div className="bg-[var(--color-component)] rounded-lg p-6 mb-6">
+                  <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+                    {/* Chain Selector */}
+                    <div className="flex items-center gap-2">
+                      <label className="text-sm font-medium">Chain:</label>
+                      <select
+                        value={selectedChain}
+                        onChange={(e) => setSelectedChain(Number(e.target.value))}
+                        className="px-3 py-2 rounded border bg-[var(--color-input-bg)] text-[var(--color-input-color)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        {SUPPORTED_CHAINS.map(chain => (
+                          <option key={chain.id} value={chain.id}>
+                            {chain.name} ({chain.symbol})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+        
+                    {/* Refresh Button */}
+                    <div className="flex items-center gap-2">
+                      {/* <button
+                        onClick={refetch}
+                        disabled={loading}
+                        className="p-2 rounded bg-[var(--color-primary-btn)] text-white hover:opacity-80 disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+                        Refresh
+                      </button> */}
+                    </div>
+                  </div>
+        
+                  {/* Stats */}
+                  <div className="mt-4 text-sm text-gray-600 mb-4">
+                    {loading ? 'Loading balances...' : `${balances.length} tokens with balance on ${getChainName(selectedChain)}`}
+                  </div>
+        
+                  {/* Balances Table */}
+                    {!loading && (
+                    <div className="bg-[var(--color-component)] rounded-lg overflow-hidden">
+                        <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead className="bg-[var(--color-table-header)]">
+                            <tr>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Token</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Symbol</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Balance</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Address</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {balances.map((token) => (
+                                <tr key={token.address} className="border-b border-[var(--color-table-header)] hover:bg-[var(--color-table-header)] transition-colors">
+                                <td className="px-4 py-3">
+                                    <div className="flex items-center gap-3">
+                                    <img
+                                        src={token.logoURI}
+                                        alt={token.symbol}
+                                        className="w-8 h-8 rounded-full"
+                                        onError={(e) => {
+                                        e.currentTarget.src = `https://via.placeholder.com/32x32/cccccc/ffffff?text=${token.symbol.charAt(0)}`;
+                                        }}
+                                    />
+                                    <div>
+                                        <div className="font-medium">{token.name}</div>
+                                        <div className="text-sm text-gray-500">{getChainName(token.chainId)}</div>
+                                    </div>
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3 font-mono text-sm font-medium">{token.symbol}</td>
+                                <td className="px-4 py-3">
+                                    <div className="font-medium">
+                                    {parseFloat(token.formattedBalance).toLocaleString(undefined, { 
+                                        maximumFractionDigits: 6,
+                                        minimumFractionDigits: 0 
+                                    })}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                    {token.decimals} decimals
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <div className="flex items-center gap-2">
+                                    <span className="font-mono text-sm">{formatAddress(token.address)}</span>
+                                    <button
+                                        onClick={() => copyToClipboard(token.address)}
+                                        className="p-1 hover:bg-[var(--color-table-header)] rounded"
+                                        title="Copy address"
+                                    >
+                                        <FiCopy className={`w-3 h-3 ${copiedAddress === token.address ? 'text-green-500' : 'text-gray-400'}`} />
+                                    </button>
+                                    </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                    <a
+                                    href={getExplorerUrl(token.chainId, token.address)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-1 hover:bg-[var(--color-table-header)] rounded inline-block"
+                                    title="View on Explorer"
+                                    >
+                                    <FiExternalLink className="w-4 h-4 text-gray-400 hover:text-blue-500" />
+                                    </a>
+                                </td>
+                                </tr>
+                            ))}
+                            </tbody>
+                        </table>
+                        </div>
+        
+                        {balances.length === 0 && !loading && (
+                            <div>
+                            <div className="p-8 text-center text-gray-50">
+                                <div>0</div>
+                                <AiFillWallet className="mx-auto text-4xl mb-2" />
+                                <div>No token balances found on {getChainName(selectedChain)}</div>
+                                <div className="text-sm mt-1">Try switching to a different chain or make sure you have tokens on this network</div>
+                            </div>
+                        </div>
+                        )}
+                    </div>
+                    )}
+        
+                    {/* Loading State */}
+                    {loading && (
+                    <div className="bg-[var(--color-component)] rounded-lg p-8">
+                        <div className="flex items-center justify-center">
+                        <FiRefreshCw className="animate-spin mr-2" />
+                        Loading your token balances...
+                        </div>
+                    </div>
+                    )}
+                </div>
+
         <div className="bg-[var(--color-component)] rounded-lg p-6 mb-8">
           <div className="text-lg font-semibold mb-2">Portfolio Overview</div>
           <div className="text-2xl font-bold mb-1">${portfolioValue}</div>
@@ -220,7 +408,7 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
                   <th className="px-4 py-2 font-semibold">Symbol</th>
                   {/* <th className="px-4 py-2 font-semibold">Balance</th> */}
                   <th className="px-4 py-2 font-semibold">USD Value</th>
-                  <th className="px-4 py-2 font-semibold">Address</th>
+                  {/* <th className="px-4 py-2 font-semibold">Address</th> */}
                   {/* <th className="px-4 py-2 font-semibold">Chain</th> */}
                 </tr>
               </thead>
@@ -240,7 +428,7 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
                         {/* USD Value: async call, so you may want to use a state or a child component for each row */}
                         <TokenUSDValue token={token} />
                       </td>
-                      <td className="px-4 py-2 font-mono">{token.address}</td>
+                      {/* <td className="px-4 py-2 font-mono">{token.address}</td> */}
                       {/* <td className="px-4 py-2">{token.chainId}</td> */}
                     </tr>
                   ))
@@ -261,19 +449,3 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
 
 export default Dashboard;
 
-function TokenUSDValue({ token }: { token: any }) {
-  const [usd, setUsd] = useState<number | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    tokenBalanceToUSD(token.address, token.balance, token.decimals)
-      .then(val => { if (mounted) setUsd(val); });
-    return () => { mounted = false; };
-  }, [token.address, token.balance, token.decimals]);
-
-  return (
-    <span>
-      {usd !== null ? `$${usd.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : '...'}
-    </span>
-  );
-}

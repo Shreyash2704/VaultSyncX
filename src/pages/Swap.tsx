@@ -1,48 +1,38 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
-import CommonInput from "../components/CommonInput";
+import React from "react"
 import ChainDropdown from "../components/ChainDropdown";
 import TokenDropdown from "../components/TokenDropdown";
-import { useAccount, useChains } from "wagmi";
-import { type ChainOption, type Token } from "../types/chain-type";
-import { getQuote, getTokenPrice } from "../utils/api-methods";
-import { parseEther } from "viem";
-import { useDebounceHook } from "../hooks/hooks";
-import { formatAddress, formatTokenAmount, parseTokenAmount } from "../utils/utility";
+import { useAccount } from "wagmi";
+import { formatAddress, formatTokenAmount } from "../utils/utility";
 import { useBridgeHooks } from "../hooks/use-bridge-hooks";
 import { useAppKit } from "@reown/appkit/react";
-import { forma } from "viem/chains";
 
 const Swap: React.FC = () => {
   const {
     fromChain,
-    setFromChain,
     fromToken,
     setFromToken,
     fromAmount,
     setFromAmount,
     toChain,
-    setToChain,
     toToken,
     setToToken,
     toAmount,
     setToAmount,
-    recipient,
-    setRecipient,
     fromChainOptions,
     toChainOptions,
     fromTokenOptions,
     toTokenOptions,
     handleOptionChange,
     handleSwap,
-    getChainIcon,
-    getTokenIcon,
     usdValue,
     handleChainSwitch,
-    balanceData
+    balanceData,
+    quoteError,
+    swappedUsdValue
   } = useBridgeHooks();
 
   const { address,chain } = useAccount();
-  const { open, close } = useAppKit();
+  const { open } = useAppKit();
 
   const handleSubmit = async () => {
     if (!address) {
@@ -57,7 +47,8 @@ const Swap: React.FC = () => {
     await handleSwap();
   }
 
-  const buttonText = !address ? "Connect" : chain && fromChain && chain.id !== fromChain.id ? "Switch Chain" : " Swap";
+  const buttonText = !address ? "Connect" : chain && fromChain && chain.id !== fromChain.id ? "Switch Chain" :quoteError ? quoteError : " Swap";
+  const isBtnDisabled = !fromChain || !toChain || !fromToken || !toToken || !fromAmount || quoteError !== "";
 
   const balance = fromChain && balanceData ? 
    `${formatTokenAmount(
@@ -125,7 +116,7 @@ const Swap: React.FC = () => {
                 label=""
                 value={fromToken?.address ?? null}
                 onChange={setFromToken}
-                options={fromTokenOptions}
+                options={fromTokenOptions ?? []}
                 placeholder="Select Token"
                 className="!bg-white !text-[var(--color-font)] !font-semibold !w-auto"
               />
@@ -208,11 +199,16 @@ const Swap: React.FC = () => {
                 label=""
                 value={toToken?.address ?? null}
                 onChange={setToToken}
-                options={toTokenOptions}
+                options={toTokenOptions ?? []}
                 placeholder="Select Token"
                 className="!bg-white !text-[var(--color-font)] !font-semibold !w-auto"
               />
             </div>
+          </div>
+           <div className="flex items-center justify-between mb-2">
+            <span className="text-gray-400 text-lg font-semibold">
+              {swappedUsdValue}
+            </span>
           </div>
         </div>
         <button
@@ -220,9 +216,10 @@ const Swap: React.FC = () => {
           className="w-full py-3 rounded-xl font-bold text-lg mt-2 bg-[var(--color-primary-btn-bg)]" 
           style={{
             // background: "var(--color-primary-btn-bg)",
-            color: "var(--color-primary-btn-text)",
+            color: quoteError ? "red" : "var(--color-primary-btn-text)",
+            cursor: isBtnDisabled ? "not-allowed" : "pointer",
           }}
-          disabled={!fromChain || !toChain || !fromToken || !toToken || !fromAmount}
+          disabled={isBtnDisabled}
           onClick={handleSubmit}
         >
           {buttonText}
