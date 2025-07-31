@@ -10,7 +10,7 @@ const navLinks = [
   { name: 'Dashboard', to: '/' },
   { name: 'Swap', to: '/swap' },
   { name: 'Aggregator', to: '/aggregator' },
-  // { name: 'Stake', to: '/stake' },
+  { name: 'Charts', to: '/charts' },
   // { name: 'NFTs', to: '/nfts' },
 ];
 

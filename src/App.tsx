@@ -6,6 +6,7 @@ import { AppKitProvider } from './context/AppkitContext';
 import Swap from './pages/Swap';
 import Navbar from './components/Navbar';
 import Aggregator from './pages/Aggregator';
+import ChartPage from './pages/ChartPage';
 
 
 function App() {
@@ -19,6 +20,9 @@ function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/swap" element={<Swap />} />
           <Route path="/aggregator" element={<Aggregator />} />
+          <Route path="/charts" element={<ChartPage />} />
+          {/* Add more routes here as you create more pages */}
+          {/* <Route path="/nfts" element={<NFTs />} /> */}
           {/* Add more routes here as you create more pages */}
         </Routes>
       </div>
