@@ -91,10 +91,9 @@ export const useBridgeHooks = () => {
   } = useQuery({
     queryKey: ["balance", address, fromChain?.id],
     queryFn: async () => {
-      return
-      if (!address || !fromChain?.id) return;
-      // const balance = await getBalance(address, fromChain.id);
-      // return balance;
+      if (!address || !fromChain || !fromChain?.id) return;
+      const balance = await getBalance(address, fromChain.id);
+      return balance;
     },
     enabled: !!address && !!fromChain?.id,
   });
