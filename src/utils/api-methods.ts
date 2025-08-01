@@ -12,6 +12,7 @@ interface QuoteDataType{
 }
 
 export const apikey = import.meta.env.VITE_API_KEY;
+const baseUrl = window.location.origin.includes("localhost") ? "/api" : "https://api.1inch.dev";
 
 // Add this utility function to your api-methods.ts
 export interface ApiResponse<T> {
@@ -87,7 +88,7 @@ export const handleApiResponse = async <T>(
 };
 
 export const getQuote = async(paramsData:QuoteDataType) =>{
-   const url = "/api/fusion-plus/quoter/v1.0/quote/receive";
+   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/receive`;
     const config = {
         headers: {
           Authorization: `Bearer ${apikey}`,
@@ -119,7 +120,7 @@ export const getQuote = async(paramsData:QuoteDataType) =>{
 }
 
 export const getQuoteData = async(param:any,data:any) =>{
-   const url = "/api/fusion-plus/quoter/v1.0/quote/receive";
+   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/receive`;
 
   const config = {
     headers: {
@@ -141,7 +142,7 @@ export const getQuoteData = async(param:any,data:any) =>{
 }
 
 export const getTokenPrice = async(token:string) =>{
-   const url = "/api/price/v1.1/1";
+   const url = `${baseUrl}/price/v1.1/1`;
 
     const config = {
       headers: {
@@ -167,7 +168,7 @@ export const getTokenPrice = async(token:string) =>{
 }
 
 export const getSupportedChains = async() =>{
-  const url = "/api/portfolio/portfolio/v5.0/general/supported_chains"
+  const url = `${baseUrl}/portfolio/portfolio/v5.0/general/supported_chains`
 
   const config = {
     headers: {
@@ -190,7 +191,7 @@ export const getSupportedChains = async() =>{
 
 export const getPortfolio = async(address:string | undefined,chain:number | undefined) =>{
   if(!address || !chain) return;
-  const url = "/api/portfolio/portfolio/v5.0/general/current_value";
+  const url = `${baseUrl}/portfolio/portfolio/v5.0/general/current_value`;
 
   const config = {
     headers: {
@@ -216,7 +217,7 @@ export const getPortfolio = async(address:string | undefined,chain:number | unde
 }
 
 export const getBalance = async(address:string, chainId:number) =>{
-  const url = `/api/balance/v1.2/${chainId}/balances/${address}`
+  const url = `${baseUrl}/balance/v1.2/${chainId}/balances/${address}`
 
   const config = {
     headers: {
@@ -258,7 +259,7 @@ export const getGasPrice = async(chainId:number) =>{
 }
 
 export const getWhiteListedTokens = async(chainId:number) =>{
-  const url = `/api/token/v1.2/${chainId}/`
+  const url = `${baseUrl}/token/v1.2/${chainId}/`
   const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
@@ -281,29 +282,9 @@ export const getWhiteListedTokens = async(chainId:number) =>{
   }
 }
 
-export const getToken = async(chainId:number, tokenAddress:string) =>{
-  const url = `https://api.1inch.dev/token/v1.2/${chainId}/custom/${tokenAddress}`
-   const config = {
-    headers: {
-      Authorization: `Bearer ${apikey}`,
-    },
-    params: {},
-    paramsSerializer: {
-      indexes: null,
-    },
-  };
-
-  try {
-    const response = await axios.get(url, config);
-    console.log(response.data);
-    return response.data;
-  } catch (error) {
-    console.error(error);
-  }
-}
 
 export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretHashList:any[]) =>{
-   const url = "/api/fusion-plus/quoter/v1.0/quote/build";
+   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/build`;
 
   const config = {
     headers: {
@@ -338,7 +319,7 @@ export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretH
 export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashList:`0x${string}`[] | undefined,signature:string,extension:string,quoteId:string) =>{
   
   const apiCall = async() =>{
-    const url = "/api/fusion-plus/relayer/v1.0/submit";
+    const url = `${baseUrl}/fusion-plus/relayer/v1.0/submit`;
 
   const config = {
     headers: {
@@ -366,7 +347,7 @@ export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashLis
 }
 
 export const submitOrderSecret = async(secret:string, orderHash:string) =>{
-    const url = "/api/fusion-plus/relayer/v1.0/submit/secret";
+    const url = `${baseUrl}/fusion-plus/relayer/v1.0/submit/secret`;
 
     const config = {
       headers: {
@@ -391,7 +372,7 @@ export const submitOrderSecret = async(secret:string, orderHash:string) =>{
 }
 
 export const getSupportedTokens = async (chainId: number) => {
-  const url = `/api/token/v1.2/${chainId}`;
+  const url = `${baseUrl}/token/v1.2/${chainId}`;
   
    const config = {
     headers: {
@@ -416,7 +397,7 @@ export const getSupportedTokens = async (chainId: number) => {
 };
 
 export const getTokenChart = async (chainId: number, token0: string, token1: string, period: string = '24H') => {
-  const url = `/api/charts/v1.0/chart/line/${token0}/${token1}/${period}/${chainId}`;
+  const url = `${baseUrl}/charts/v1.0/chart/line/${token0}/${token1}/${period}/${chainId}`;
    const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
@@ -437,7 +418,7 @@ export const getTokenChart = async (chainId: number, token0: string, token1: str
 };
 
 export const getTokenCandleChart = async (chainId: number, tokenAddress: string, period: string = '24H') => {
-  const url = `/api/charts/v1.0/${chainId}/chart/${tokenAddress}/candle`;
+  const url = `${baseUrl}/charts/v1.0/${chainId}/chart/${tokenAddress}/candle`;
   
   const config = {
     headers: {
@@ -456,7 +437,7 @@ export const getTokenCandleChart = async (chainId: number, tokenAddress: string,
 };
 
 export const getContractAddress = async(chainId:number) =>{
-    const url = "/api/fusion-plus/orders/v1.0/order/escrow";
+    const url = `${baseUrl}/fusion-plus/orders/v1.0/order/escrow`;
 
   const config = {
     headers: {
@@ -480,8 +461,7 @@ export const getContractAddress = async(chainId:number) =>{
 }
 
 export async function checkOrderConfirmed(orderHash: string) {
-  const url =
-    `/api/fusion-plus/orders/v1.0/order/ready-to-accept-secret-fills/${orderHash}`;
+  const url = `${baseUrl}/fusion-plus/orders/v1.0/order/ready-to-accept-secret-fills/${orderHash}`;
 
   const config = {
     headers: {
