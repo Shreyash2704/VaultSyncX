@@ -1,10 +1,11 @@
-import React from "react"
+import React, { useState } from "react"
 import ChainDropdown from "../components/ChainDropdown";
 import TokenDropdown from "../components/TokenDropdown";
 import { useAccount } from "wagmi";
 import { formatAddress, formatTokenAmount } from "../utils/utility";
 import { useBridgeHooks } from "../hooks/use-bridge-hooks";
 import { useAppKit } from "@reown/appkit/react";
+import TransactionStatus from "../components/TransactionStatus";
 
 const Swap: React.FC = () => {
   const {
@@ -28,11 +29,17 @@ const Swap: React.FC = () => {
     handleChainSwitch,
     balanceData,
     quoteError,
-    swappedUsdValue
+    swappedUsdValue,
+    transactionStep,
+    transactionHash,
+    transactionError,
+    showTransactionStatus,
+    setShowTransactionStatus
   } = useBridgeHooks();
 
   const { address,chain } = useAccount();
   const { open } = useAppKit();
+  
 
   const handleSubmit = async () => {
     if (!address) {
@@ -225,6 +232,17 @@ const Swap: React.FC = () => {
           {buttonText}
         </button>
       </div>
+
+      <TransactionStatus
+        isOpen={showTransactionStatus}
+        onClose={() => setShowTransactionStatus(false)}
+        currentStep={transactionStep}
+        transactionHash={transactionHash}
+        errorMessage={transactionError}
+        fromToken={fromToken?.symbol}
+        toToken={toToken?.symbol}
+        amount={fromAmount}
+      />
     </div>
   );
 };

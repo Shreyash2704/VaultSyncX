@@ -249,140 +249,140 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
         )}
 
         
-                {/* Controls */}
-                <div className="bg-[var(--color-component)] rounded-lg p-6 mb-6">
-                  <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                    {/* Chain Selector */}
-                    <div className="flex items-center gap-2">
-                      <label className="text-sm font-medium">Chain:</label>
-                      <select
-                        value={selectedChain}
-                        onChange={(e) => setSelectedChain(Number(e.target.value))}
-                        className="px-3 py-2 rounded border bg-[var(--color-input-bg)] text-[var(--color-input-color)] focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        {SUPPORTED_CHAINS.map(chain => (
-                          <option key={chain.id} value={chain.id}>
-                            {chain.name} ({chain.symbol})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-        
-                    {/* Refresh Button */}
-                    <div className="flex items-center gap-2">
-                      {/* <button
-                        onClick={refetch}
-                        disabled={loading}
-                        className="p-2 rounded bg-[var(--color-primary-btn)] text-white hover:opacity-80 disabled:opacity-50 flex items-center gap-2"
-                      >
-                        <FiRefreshCw className={loading ? 'animate-spin' : ''} />
-                        Refresh
-                      </button> */}
-                    </div>
-                  </div>
-        
-                  {/* Stats */}
-                  <div className="mt-4 text-sm text-gray-600 mb-4">
-                    {loading ? 'Loading balances...' : `${balances.length} tokens with balance on ${getChainName(selectedChain)}`}
-                  </div>
-        
-                  {/* Balances Table */}
-                    {!loading && (
-                    <div className="bg-[var(--color-component)] rounded-lg overflow-hidden">
-                        <div className="overflow-x-auto">
-                        <table className="min-w-full">
-                            <thead className="bg-[var(--color-table-header)]">
-                            <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Token</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Symbol</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Balance</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Address</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                            {balances.map((token) => (
-                                <tr key={token.address} className="border-b border-[var(--color-table-header)] hover:bg-[var(--color-table-header)] transition-colors">
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-3">
-                                    <img
-                                        src={token.logoURI}
-                                        alt={token.symbol}
-                                        className="w-8 h-8 rounded-full"
-                                        onError={(e) => {
-                                        e.currentTarget.src = `https://via.placeholder.com/32x32/cccccc/ffffff?text=${token.symbol.charAt(0)}`;
-                                        }}
-                                    />
-                                    <div>
-                                        <div className="font-medium">{token.name}</div>
-                                        <div className="text-sm text-gray-500">{getChainName(token.chainId)}</div>
-                                    </div>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 font-mono text-sm font-medium">{token.symbol}</td>
-                                <td className="px-4 py-3">
-                                    <div className="font-medium">
-                                    {parseFloat(token.formattedBalance).toLocaleString(undefined, { 
-                                        maximumFractionDigits: 6,
-                                        minimumFractionDigits: 0 
-                                    })}
-                                    </div>
-                                    <div className="text-xs text-gray-500">
-                                    {token.decimals} decimals
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <div className="flex items-center gap-2">
-                                    <span className="font-mono text-sm">{formatAddress(token.address)}</span>
-                                    <button
-                                        onClick={() => copyToClipboard(token.address)}
-                                        className="p-1 hover:bg-[var(--color-table-header)] rounded"
-                                        title="Copy address"
-                                    >
-                                        <FiCopy className={`w-3 h-3 ${copiedAddress === token.address ? 'text-green-500' : 'text-gray-400'}`} />
-                                    </button>
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3">
-                                    <a
-                                    href={getExplorerUrl(token.chainId, token.address)}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="p-1 hover:bg-[var(--color-table-header)] rounded inline-block"
-                                    title="View on Explorer"
-                                    >
-                                    <FiExternalLink className="w-4 h-4 text-gray-400 hover:text-blue-500" />
-                                    </a>
-                                </td>
-                                </tr>
-                            ))}
-                            </tbody>
-                        </table>
-                        </div>
-        
-                        {balances.length === 0 && !loading && (
+        {/* Controls */}
+        <div className="bg-[var(--color-component)] rounded-lg p-6 mb-6">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            {/* Chain Selector */}
+            <div className="flex items-center gap-2">
+              <label className="text-sm font-medium">Chain:</label>
+              <select
+                value={selectedChain}
+                onChange={(e) => setSelectedChain(Number(e.target.value))}
+                className="px-3 py-2 rounded border bg-[var(--color-input-bg)] text-[var(--color-input-color)] focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {SUPPORTED_CHAINS.map(chain => (
+                  <option key={chain.id} value={chain.id}>
+                    {chain.name} ({chain.symbol})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Refresh Button */}
+            <div className="flex items-center gap-2">
+              {/* <button
+                onClick={refetch}
+                disabled={loading}
+                className="p-2 rounded bg-[var(--color-primary-btn)] text-white hover:opacity-80 disabled:opacity-50 flex items-center gap-2"
+              >
+                <FiRefreshCw className={loading ? 'animate-spin' : ''} />
+                Refresh
+              </button> */}
+            </div>
+          </div>
+
+          {/* Stats */}
+          <div className="mt-4 text-sm text-gray-600 mb-4">
+            {loading ? 'Loading balances...' : `${balances.length} tokens with balance on ${getChainName(selectedChain)}`}
+          </div>
+
+          {/* Balances Table */}
+            {!loading && (
+            <div className="bg-[var(--color-component)] rounded-lg overflow-hidden">
+                <div className="overflow-x-auto">
+                <table className="min-w-full">
+                    <thead className="bg-[var(--color-table-header)]">
+                    <tr>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Token</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Symbol</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Balance</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Address</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {balances.map((token) => (
+                        <tr key={token.address} className="border-b border-[var(--color-table-header)] hover:bg-[var(--color-table-header)] transition-colors">
+                        <td className="px-4 py-3">
+                            <div className="flex items-center gap-3">
+                            <img
+                                src={token.logoURI}
+                                alt={token.symbol}
+                                className="w-8 h-8 rounded-full"
+                                onError={(e) => {
+                                e.currentTarget.src = `https://via.placeholder.com/32x32/cccccc/ffffff?text=${token.symbol.charAt(0)}`;
+                                }}
+                            />
                             <div>
-                            <div className="p-8 text-center text-gray-50">
-                                <div>0</div>
-                                <AiFillWallet className="mx-auto text-4xl mb-2" />
-                                <div>No token balances found on {getChainName(selectedChain)}</div>
-                                <div className="text-sm mt-1">Try switching to a different chain or make sure you have tokens on this network</div>
+                                <div className="font-medium">{token.name}</div>
+                                <div className="text-sm text-gray-500">{getChainName(token.chainId)}</div>
                             </div>
-                        </div>
-                        )}
-                    </div>
-                    )}
-        
-                    {/* Loading State */}
-                    {loading && (
-                    <div className="bg-[var(--color-component)] rounded-lg p-8">
-                        <div className="flex items-center justify-center">
-                        <FiRefreshCw className="animate-spin mr-2" />
-                        Loading your token balances...
-                        </div>
-                    </div>
-                    )}
+                            </div>
+                        </td>
+                        <td className="px-4 py-3 font-mono text-sm font-medium">{token.symbol}</td>
+                        <td className="px-4 py-3">
+                            <div className="font-medium">
+                            {parseFloat(token.formattedBalance).toLocaleString(undefined, { 
+                                maximumFractionDigits: 6,
+                                minimumFractionDigits: 0 
+                            })}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                            {token.decimals} decimals
+                            </div>
+                        </td>
+                        <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm">{formatAddress(token.address)}</span>
+                            <button
+                                onClick={() => copyToClipboard(token.address)}
+                                className="p-1 hover:bg-[var(--color-table-header)] rounded"
+                                title="Copy address"
+                            >
+                                <FiCopy className={`w-3 h-3 ${copiedAddress === token.address ? 'text-green-500' : 'text-gray-400'}`} />
+                            </button>
+                            </div>
+                        </td>
+                        <td className="px-4 py-3">
+                            <a
+                            href={getExplorerUrl(token.chainId, token.address)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1 hover:bg-[var(--color-table-header)] rounded inline-block"
+                            title="View on Explorer"
+                            >
+                            <FiExternalLink className="w-4 h-4 text-gray-400 hover:text-blue-500" />
+                            </a>
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </table>
                 </div>
+
+                {balances.length === 0 && !loading && (
+                    <div>
+                    <div className="p-8 text-center text-gray-50">
+                        <div>0</div>
+                        <AiFillWallet className="mx-auto text-4xl mb-2" />
+                        <div>No token balances found on {getChainName(selectedChain)}</div>
+                        <div className="text-sm mt-1">Try switching to a different chain or make sure you have tokens on this network</div>
+                    </div>
+                </div>
+                )}
+            </div>
+            )}
+
+            {/* Loading State */}
+            {loading && (
+            <div className="bg-[var(--color-component)] rounded-lg p-8">
+                <div className="flex items-center justify-center">
+                <FiRefreshCw className="animate-spin mr-2" />
+                Loading your token balances...
+                </div>
+            </div>
+            )}
+        </div>
 
         <div className="bg-[var(--color-component)] rounded-lg p-6 mb-8">
           <div className="text-lg font-semibold mb-2">Portfolio Overview</div>
@@ -441,6 +441,7 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
             </table>
           </div>
         </div>
+
         
       </div>
     </div>

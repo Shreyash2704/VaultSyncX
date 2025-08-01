@@ -11,6 +11,7 @@ import { formatTokenAmount, parseTokenAmount } from "../utils/utility";
 import {
   apikey,
   buildOrderByQuote,
+  checkOrderConfirmed,
   getBalance,
   getQuote,
   getQuoteData,
@@ -21,6 +22,8 @@ import {
 } from "../utils/api-methods";
 import { useQuery } from "@tanstack/react-query";
 import { useHashLockHook } from "./use-hashlock-hooks";
+import { useTokenApproval } from "./use-token-approval";
+import type { TransactionStep } from "../components/TransactionStatus";
 
 export const useBridgeHooks = () => {
   const chains = useChains();
@@ -42,11 +45,19 @@ export const useBridgeHooks = () => {
   const [balance, setBalance] = useState("");
   const [quoteError, setquoteError] = useState("")
 
-  const { signTypedDataAsync } = useSignTypedData();
+  const [transactionStep, setTransactionStep] = useState<TransactionStep>('signed');
+  const [transactionHash, setTransactionHash] = useState<string>('');
+  const [transactionError, setTransactionError] = useState<string>('');
+  const [showTransactionStatus, setShowTransactionStatus] = useState(false);
 
- 
+  const [checkContinuouslyForOrder, setCheckContinuouslyForOrder] = useState(false);
+
+  const { signTypedDataAsync } = useSignTypedData();
+  const { isWriteError,handleApprove, approvalStatus,error: approvalError } = useTokenApproval();
 
   const [quoteData, setQuoteData] = useState<any>(null);
+
+  const [txData, settxData] = useState<any>(null);
 
   const { generateSecrets, getHashLock, hashSecret, getMerkleRoot } =
     useHashLockHook();
@@ -112,16 +123,6 @@ export const useBridgeHooks = () => {
     [toChain, fromToken]
   );
 
-   // Convert API token objects to arrays for easier use
-  // const fromTokenOptions = useMemo(() => {
-  //   if (!fromTokensData) return [];
-  //   return Object.values(fromTokensData) as Token[];
-  // }, [fromTokensData]);
-
-  // const toTokenOptions = useMemo(() => {
-  //   if (!toTokensData) return [];
-  //   return Object.values(toTokensData) as Token[];
-  // }, [toTokensData]);
 
   // Chain selection handler
   const handleOptionChange = useCallback(
@@ -195,7 +196,10 @@ export const useBridgeHooks = () => {
     return signature;
   };
 
+  
   const handleSwap = async () => {
+    setShowTransactionStatus(true)
+    setTransactionStep('processing');
     const preset = PresetEnum.fast;
 
     const hashlockData = generateSecrets(
@@ -210,38 +214,66 @@ export const useBridgeHooks = () => {
       walletAddress: address || "",
     };
     // Build order using quote data
-    const order = await buildOrderByQuote(quoteData, params, hashlockData.secrets);
+    const order = await buildOrderByQuote(quoteData, params, hashlockData.secretHashes);
+    
+    settxData({
+      order,
+      params,
+      hashlockData,
+      preset
+    })
+    await handleApprove({
+      // @ts-ignore
+      tokenAddress: fromToken?.address,
+      spenderAddress: order.typedData?.domain.verifyingContract,
+      amount: parseTokenAmount(debouncedAmount, fromToken?.decimals || 18),
+      decimals: fromToken?.decimals || 18,
+    })
 
 
 
-    const signature = await signOrderMessage(order?.typedData);
+  };
+
+  const continueProcessing = async() =>{
+    const signature = await signOrderMessage(txData.order?.typedData);
+
+    if(!signature) {
+      setTransactionError("Failed to sign order message");
+      setTransactionStep('error');
+      return;
+    }
+    setTransactionStep('signed');
     console.log("Order signature:", signature);
     // Conditionally include secretHashes based on secretsCount
-    const secretsCount = quoteData?.presets[preset]?.secretsCount ?? 1;
-    const secretHashesToSubmit = secretsCount > 1 ? hashlockData.secretHashes : undefined;
+    const secretsCount = quoteData?.presets[txData.preset]?.secretsCount ?? 1;
+    const secretHashesToSubmit = secretsCount > 1 ? txData.hashlockData.secretHashes : undefined;
 
-    const submitedOrder = await submitOrder(order?.typedData?.message, params, secretHashesToSubmit, signature, order.extension, quoteData?.quoteId);
+    const submitResult = await submitOrder(txData.order?.typedData?.message, txData.params, secretHashesToSubmit, signature, txData.order.extension, quoteData?.quoteId);
+    // Handle errors vs no response differently
+    if (submitResult.status === 'error') {
+      // API returned an error - don't retry for certain errors
+      const errorMessage = submitResult.error || 'Failed to submit order';
+      
 
-    console.log("Order submitted:", submitedOrder);
+      setTransactionError(errorMessage);
+      setTransactionStep('error');
+      return;
+    }
 
-    const submitSecret = await submitOrderSecret(hashlockData.secrets[0],order.orderHash);
+    setTransactionStep('submitted');
+    console.log("Order submitted:", submitResult);
+    setCheckContinuouslyForOrder(true);
+    
+    
+  }
+
+  const continueProcessing2 = async() =>{
+    const submitSecret = await submitOrderSecret(txData.hashlockData.secrets[0], txData.order.orderHash);
     console.log("Secret submitted:", submitSecret);
-  };
+    setTransactionStep('confirmed');
+  }
 
-  // Placeholder icons (replace with SVGs or images as needed)
-  const getChainIcon = (chainName?: string) => {
-    if (!chainName) return "🌐";
-    if (chainName.toLowerCase().includes("ethereum")) return "🟦";
-    if (chainName.toLowerCase().includes("arbitrum")) return "⚪";
-    return "🌐";
-  };
-  const getTokenIcon = (tokenSymbol?: string) => {
-    if (!tokenSymbol) return "🪙";
-    if (tokenSymbol === "ETH") return "⬡";
-    if (tokenSymbol === "USDC") return "💵";
-    if (tokenSymbol === "USDT") return "💲";
-    return "🪙";
-  };
+  
 
   // USD value calculation
   const usdValue = useMemo(
@@ -304,7 +336,31 @@ export const useBridgeHooks = () => {
     fetchQuote();
   }, [fromChain, toChain, debouncedAmount, fromToken, toToken, address]);
 
+  useEffect(() => {
+    if(isWriteError || approvalStatus === "error"){
+      setTransactionError(approvalError?.message || "Token approval failed");
+      setTransactionStep('error');
+    }
+    if(approvalStatus === "success"){
+      setTransactionError('');
+      continueProcessing()
+    }
+  }, [approvalStatus,approvalError,isWriteError ])
   
+  useEffect(() => {
+    if (checkContinuouslyForOrder && txData.order?.orderHash) {
+      const interval = setInterval(async () => {
+        const orderStatus = await checkOrderConfirmed(txData.order?.orderHash);
+        if (orderStatus.fills.length > 0) {
+          setTransactionStep('placed')
+          continueProcessing2();
+          setCheckContinuouslyForOrder(false);
+          return
+        }
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [checkContinuouslyForOrder,txData]);
 
   return {
     fromChain,
@@ -327,8 +383,8 @@ export const useBridgeHooks = () => {
     toTokenOptions,
     handleOptionChange,
     handleSwap,
-    getChainIcon,
-    getTokenIcon,
+    // getChainIcon,
+    // getTokenIcon,
     usdValue,
     handleChainSwitch,
     balanceData,
@@ -339,5 +395,10 @@ export const useBridgeHooks = () => {
     fromTokensLoading, // Loading states for UI
     toTokensLoading,
     fromTokensError, // Error states for UI
+    transactionStep,
+    transactionHash,
+    transactionError,
+    showTransactionStatus, 
+    setShowTransactionStatus
   };
 };

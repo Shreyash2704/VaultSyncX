@@ -14,6 +14,79 @@ interface QuoteDataType{
 
 export const apikey = import.meta.env.VITE_API_KEY;
 
+// Add this utility function to your api-methods.ts
+export interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  status: 'success' | 'error' | 'no_response';
+}
+
+export const handleApiResponse = async <T>(
+  apiCall: () => Promise<T>,
+  timeoutMs: number = 30000
+): Promise<ApiResponse<T>> => {
+  try {
+    // Create a timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('API_TIMEOUT')), timeoutMs);
+    });
+
+    // Race between API call and timeout
+    const result = await Promise.race([apiCall(), timeoutPromise]);
+
+    // Check if result is valid
+    if (result === null || result === undefined) {
+      return {
+        success: false,
+        status: 'no_response',
+        error: 'No response from server'
+      };
+    }
+
+    return {
+      success: true,
+      status: 'success',
+      data: result
+    };
+
+  } catch (error: any) {
+    // Handle different types of errors
+    if (error.message === 'API_TIMEOUT') {
+      return {
+        success: false,
+        status: 'no_response',
+        error: 'Request timed out'
+      };
+    }
+
+    // Handle Axios errors
+    if (error.response) {
+      return {
+        success: false,
+        status: 'error',
+        error: error.response.data?.description || error.response.data?.message || 'API Error'
+      };
+    }
+
+    // Handle network errors
+    if (error.request) {
+      return {
+        success: false,
+        status: 'no_response',
+        error: 'Network error - no response received'
+      };
+    }
+
+    // Handle other errors
+    return {
+      success: false,
+      status: 'error',
+      error: error.message || 'Unknown error occurred'
+    };
+  }
+};
+
 export const getQuote = async(paramsData:QuoteDataType) =>{
    const url = "/api/fusion-plus/quoter/v1.0/quote/receive";
     const config = {
@@ -264,7 +337,9 @@ export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretH
 }
 
 export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashList:`0x${string}`[] | undefined,signature:string,extension:string,quoteId:string) =>{
-  const url = "/api/fusion-plus/relayer/v1.0/submit";
+  
+  const apiCall = async() =>{
+    const url = "/api/fusion-plus/relayer/v1.0/submit";
 
   const config = {
     headers: {
@@ -284,16 +359,15 @@ export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashLis
     secretHashes: secretHashList,
   };
 
-  try {
-    const response = await axios.post(url, body, config);
-    console.log(response.data);
-  } catch (error) {
-    console.error(error);
+   const response = await axios.post(url, body, config);
+    return response.data;
   }
+  
+   return handleApiResponse(apiCall, 30000);
 }
 
 export const submitOrderSecret = async(secret:string, orderHash:string) =>{
-    const url = "https://api.1inch.dev/fusion-plus/relayer/v1.0/submit/secret";
+    const url = "/api/fusion-plus/relayer/v1.0/submit/secret";
 
     const config = {
       headers: {
@@ -381,4 +455,51 @@ export const getTokenCandleChart = async (chainId: number, tokenAddress: string,
     throw error;
   }
 };
+
+export const getContractAddress = async(chainId:number) =>{
+    const url = "/api/fusion-plus/orders/v1.0/order/escrow";
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${apikey}`,
+    },
+    params: {
+      chainId: chainId.toString(),
+    },
+    paramsSerializer: {
+      indexes: null,
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    console.log(response.data);
+    return response.data.address;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function checkOrderConfirmed(orderHash: string) {
+  const url =
+    `/api/fusion-plus/orders/v1.0/order/ready-to-accept-secret-fills/${orderHash}`;
+
+  const config = {
+    headers: {
+      Authorization: `Bearer ${apikey}`,
+    },
+    params: {},
+    paramsSerializer: {
+      indexes: null,
+    },
+  };
+
+  try {
+    const response = await axios.get(url, config);
+    console.log(response.data);
+    return response.data;
+  } catch (error) {
+    console.error(error);
+  }
+}
 
