@@ -11,6 +11,7 @@ interface TransactionStatusProps {
   fromToken?: string;
   toToken?: string;
   amount?: string;
+  toAmount?: string;
 }
 
 const TransactionStatus: React.FC<TransactionStatusProps> = ({
@@ -20,7 +21,8 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
   errorMessage,
   fromToken = 'TOKEN',
   toToken = 'TOKEN',
-  amount = '0'
+  amount = '0',
+  toAmount = '0'
 }) => {
   if (!isOpen) return null;
 
@@ -162,7 +164,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
               className="text-lg font-semibold"
               style={{ color: 'var(--color-font)' }}
             >
-              {amount} {fromToken} → {toToken}
+              {amount} {fromToken} → {toAmount} {toToken}
             </div>
           </div>
         </div>

@@ -240,6 +240,7 @@ const Swap: React.FC = () => {
         fromToken={fromToken?.symbol}
         toToken={toToken?.symbol}
         amount={fromAmount}
+        toAmount={toAmount}
       />
     </div>
   );
