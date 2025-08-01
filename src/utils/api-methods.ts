@@ -12,8 +12,8 @@ interface QuoteDataType{
 }
 
 export const apikey = import.meta.env.VITE_API_KEY;
-const baseUrl = window.location.origin.includes("localhost") ? "/api" : "https://api.1inch.dev";
-
+// const baseUrl = window.location.origin.includes("localhost") ? "/api" : "https://api.1inch.dev";
+const baseUrl = "/api"
 // Add this utility function to your api-methods.ts
 export interface ApiResponse<T> {
   success: boolean;
