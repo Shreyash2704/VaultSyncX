@@ -13,7 +13,8 @@ interface QuoteDataType{
 
 export const apikey = import.meta.env.VITE_API_KEY;
 // const baseUrl = window.location.origin.includes("localhost") ? "/api" : "https://api.1inch.dev";
-const baseUrl = "/api"
+const baseUrl = "https://proxy-server-production-d3a6.up.railway.app/?url=https://api.1inch.dev"
+// const baseUrl = "/api"
 // Add this utility function to your api-methods.ts
 export interface ApiResponse<T> {
   success: boolean;
@@ -88,12 +89,12 @@ export const handleApiResponse = async <T>(
 };
 
 export const getQuote = async(paramsData:QuoteDataType) =>{
-   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/receive`;
+   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/receive?srcChain=${paramsData.srcChain}&dstChain=${paramsData.dstChain}&srcTokenAddress=${paramsData.srcTokenAddress}&dstTokenAddress=${paramsData.dstTokenAddress}&amount=${paramsData.amount}&walletAddress=${paramsData.walletAddress}&enableEstimate=${paramsData.enableEstimate}`;
     const config = {
         headers: {
           Authorization: `Bearer ${apikey}`,
         },
-        params: paramsData,
+        // params: paramsData,
         paramsSerializer: {
           indexes: null,
         },
@@ -191,16 +192,16 @@ export const getSupportedChains = async() =>{
 
 export const getPortfolio = async(address:string | undefined,chain:number | undefined) =>{
   if(!address || !chain) return;
-  const url = `${baseUrl}/portfolio/portfolio/v5.0/general/current_value`;
+  const url = `${baseUrl}/portfolio/portfolio/v5.0/general/current_value?chain_id=${chain}&addresses=${address}&use_cache=true`;
 
   const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
     },
-    params: {
-      chain_id: chain,
-      addresses: [address],
-    },
+    // params: {
+    //   chain_id: chain,
+    //   addresses: [address],
+    // },
     paramsSerializer: {
       indexes: null,
     },
@@ -259,15 +260,15 @@ export const getGasPrice = async(chainId:number) =>{
 }
 
 export const getWhiteListedTokens = async(chainId:number) =>{
-  const url = `${baseUrl}/token/v1.2/${chainId}/`
+  const url = `${baseUrl}/token/v1.2/${chainId}/?provider=1inch&country=US`
   const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
     },
-    params: {
-      provider: "1inch",
-      country: "US",
-    },
+    // params: {
+    //   provider: "1inch",
+    //   country: "US",
+    // },
     paramsSerializer: {
       indexes: null,
     },
@@ -284,7 +285,7 @@ export const getWhiteListedTokens = async(chainId:number) =>{
 
 
 export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretHashList:any[]) =>{
-   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/build`;
+   const url = `${baseUrl}/fusion-plus/quoter/v1.0/quote/build?`;
 
   const config = {
     headers: {
@@ -297,10 +298,9 @@ export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretH
       dstTokenAddress: params.dstTokenAddress,
       amount: params.amount,
       walletAddress: params.walletAddress,
+      enable:true
     },
-    paramsSerializer: {
-      indexes: null,
-    },
+   
   };
   const body = {
     quote: quote,
@@ -318,7 +318,6 @@ export const buildOrderByQuote = async(quote:any,params:BuildOrderParams,secretH
 
 export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashList:`0x${string}`[] | undefined,signature:string,extension:string,quoteId:string) =>{
   
-  const apiCall = async() =>{
     const url = `${baseUrl}/fusion-plus/relayer/v1.0/submit`;
 
   const config = {
@@ -339,11 +338,12 @@ export const submitOrder = async(Order:any,params:BuildOrderParams,secretHashLis
     secretHashes: secretHashList,
   };
 
-   const response = await axios.post(url, body, config);
-    return response.data;
-  }
-  
-   return handleApiResponse(apiCall, 30000);
+   try {
+      const response = await axios.post(url, body, config);
+      console.log(response.data);
+    } catch (error) {
+      console.error(error);
+    }
 }
 
 export const submitOrderSecret = async(secret:string, orderHash:string) =>{
@@ -372,16 +372,16 @@ export const submitOrderSecret = async(secret:string, orderHash:string) =>{
 }
 
 export const getSupportedTokens = async (chainId: number) => {
-  const url = `${baseUrl}/token/v1.2/${chainId}`;
+  const url = `${baseUrl}/token/v1.2/${chainId}/?provider=1inch&country=US`;
   
    const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
     },
-    params: {
-      provider: "1inch",
-      country: "US",
-    },
+    // params: {
+    //   provider: "1inch",
+    //   country: "US",
+    // },
     paramsSerializer: {
       indexes: null,
     },
@@ -418,13 +418,13 @@ export const getTokenChart = async (chainId: number, token0: string, token1: str
 };
 
 export const getTokenCandleChart = async (chainId: number, tokenAddress: string, period: string = '24H') => {
-  const url = `${baseUrl}/charts/v1.0/${chainId}/chart/${tokenAddress}/candle`;
+  const url = `${baseUrl}/charts/v1.0/${chainId}/chart/${tokenAddress}/candle?period=${period}`;
   
   const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
     },
-    params: { period }
+    // params: { period }
   };
 
   try {
@@ -437,15 +437,15 @@ export const getTokenCandleChart = async (chainId: number, tokenAddress: string,
 };
 
 export const getContractAddress = async(chainId:number) =>{
-    const url = `${baseUrl}/fusion-plus/orders/v1.0/order/escrow`;
+    const url = `${baseUrl}/fusion-plus/orders/v1.0/order/escrow?chainId=${chainId}`;
 
   const config = {
     headers: {
       Authorization: `Bearer ${apikey}`,
     },
-    params: {
-      chainId: chainId.toString(),
-    },
+    // params: {
+    //   chainId: chainId.toString(),
+    // },
     paramsSerializer: {
       indexes: null,
     },

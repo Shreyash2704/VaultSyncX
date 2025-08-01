@@ -214,17 +214,6 @@ export const useBridgeHooks = () => {
     const secretHashesToSubmit = secretsCount > 1 ? txData.hashlockData.secretHashes : undefined;
 
     const submitResult = await submitOrder(txData.order?.typedData?.message, txData.params, secretHashesToSubmit, signature, txData.order.extension, quoteData?.quoteId);
-    // Handle errors vs no response differently
-    if (submitResult.status === 'error') {
-      // API returned an error - don't retry for certain errors
-      const errorMessage = submitResult.error || 'Failed to submit order';
-      
-
-      setTransactionError(errorMessage);
-      setTransactionStep('error');
-      return;
-    }
-
     setTransactionStep('submitted');
     console.log("Order submitted:", submitResult);
     setCheckContinuouslyForOrder(true);
