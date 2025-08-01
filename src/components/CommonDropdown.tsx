@@ -1,7 +1,6 @@
 import React from 'react';
 import { type Chain
- } from 'viem'
-import type { UseChainIdParameters } from 'wagmi';
+ } from 'viem';
 
 type Token = {
   name: string;

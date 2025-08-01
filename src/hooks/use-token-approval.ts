@@ -56,7 +56,7 @@ const handleApprove: (props: UseTokenApprovalProps) => Promise<void> = async ({
   console.log("amount", amount, decimals,amountWei);
   try {
     //   setApprovalStatus('pending');
-    const data = await writeContract({
+    await writeContract({
       address: tokenAddress,
       abi: erc20Abi,
       functionName: 'approve',

@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 
 export const useDebounceHook= <T>(value:T,delay:number) : T => {
@@ -42,20 +42,3 @@ export const useThrottling = <T>(value:T,delay:number) : T =>{
 
 }
 
-interface UseFetchResult<T> {
-  data: T | null;
-  loading: boolean;
-  error: string | null;
-}
-
-export const useFetchHook = <T>(url:string):UseFetchResult<T> =>{
-    const [data, setdata] = useState<T | null>(null)
-    const [loading, setloading] = useState<boolean>(false)
-    const [error, seterror] = useState<string | null>(null)
-
-    
-
-    return {
-        data,loading,error
-    }
-}

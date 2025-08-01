@@ -14,16 +14,20 @@ export async function aggregatorToken(address: string | undefined, chainIds: num
 
     // 2. Get balances for this chain and address
     const balancesRes = await getBalance(address, chainId);
+
+    
     const balances = balancesRes || {};
 
     // 3. Aggregate tokens with non-zero balance and available info
-    Object.entries(balances).forEach(([tokenAddress, rawBalance]: [string, string]) => {
+    Object.entries(balances).forEach(([tokenAddress, rawBalance]) => {
       const tokenInfo = whiteListedTokens[tokenAddress];
       if (!tokenInfo) return; // skip if token info not present
       if (rawBalance === "0" || rawBalance === "0.0") return; // skip zero balance
 
-      if (!tokenMap[tokenAddress]) {
-        tokenMap[tokenAddress] = {
+      console.log(`Fetching tokens for address ${tokenInfo.address} on chain ${chainId} has balance ${rawBalance} ggg ${JSON.stringify(tokenInfo)}`);
+      // console.log(`Token info: ${JSON.stringify(tokenInfo)}`);
+      if (!tokenMap[tokenInfo.name]) {
+        tokenMap[tokenInfo.name] = {
           chainId: tokenInfo.chainId,
           symbol: tokenInfo.symbol,
           name: tokenInfo.name,
@@ -39,7 +43,7 @@ export async function aggregatorToken(address: string | undefined, chainIds: num
         };
       }
       // Sum balances (convert to number for addition)
-      tokenMap[tokenAddress].balance += Number(rawBalance);
+      tokenMap[tokenInfo.name].balance += Number(rawBalance as string);
     });
   }
 

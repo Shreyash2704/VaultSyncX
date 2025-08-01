@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 import ChainDropdown from "../components/ChainDropdown";
 import TokenDropdown from "../components/TokenDropdown";
 import { useAccount } from "wagmi";
@@ -31,7 +31,6 @@ const Swap: React.FC = () => {
     quoteError,
     swappedUsdValue,
     transactionStep,
-    transactionHash,
     transactionError,
     showTransactionStatus,
     setShowTransactionStatus
@@ -237,7 +236,6 @@ const Swap: React.FC = () => {
         isOpen={showTransactionStatus}
         onClose={() => setShowTransactionStatus(false)}
         currentStep={transactionStep}
-        transactionHash={transactionHash}
         errorMessage={transactionError}
         fromToken={fromToken?.symbol}
         toToken={toToken?.symbol}

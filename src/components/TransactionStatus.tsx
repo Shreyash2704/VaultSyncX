@@ -7,7 +7,6 @@ interface TransactionStatusProps {
   isOpen: boolean;
   onClose: () => void;
   currentStep: TransactionStep;
-  transactionHash?: string;
   errorMessage?: string;
   fromToken?: string;
   toToken?: string;
@@ -18,7 +17,6 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
   isOpen,
   onClose,
   currentStep,
-  transactionHash,
   errorMessage,
   fromToken = 'TOKEN',
   toToken = 'TOKEN',
@@ -249,26 +247,6 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
           </div>
         )}
 
-        {/* Transaction Hash */}
-        {transactionHash && (
-          <div 
-            className="rounded-xl p-3 mb-4"
-            style={{ background: 'var(--color-card-section)' }}
-          >
-            <div 
-              className="text-xs opacity-70 mb-1"
-              style={{ color: 'var(--color-font)' }}
-            >
-              Transaction Hash
-            </div>
-            <div 
-              className="font-mono text-sm break-all"
-              style={{ color: 'var(--color-font)' }}
-            >
-              {transactionHash}
-            </div>
-          </div>
-        )}
 
         {/* Action Buttons */}
         <div className="flex space-x-3">

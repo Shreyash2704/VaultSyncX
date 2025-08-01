@@ -1,9 +1,7 @@
-import React from 'react'
 import TokenChart from '../components/TokenChart'
 
-type Props = {}
 
-const ChartPage = (props: Props) => {
+const ChartPage = () => {
   return (
     <div className="min-h-screen bg-[var(--color-bg)] text-[var(--color-font)]">
   

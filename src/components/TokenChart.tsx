@@ -121,7 +121,7 @@ const TokenChart: React.FC = () => {
     const maxTime = Math.max(...times);
     const timeRange = maxTime - minTime || 1;
 
-    const points = chartData.map((d, i) => {
+    const points = chartData.map((d) => {
       const x = padding + ((d.time - minTime) / timeRange) * (width - 2 * padding);
       const y = height - padding - ((d.value - minValue) / valueRange) * (height - 2 * padding);
       return `${x},${y}`;

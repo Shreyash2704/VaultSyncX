@@ -1,4 +1,4 @@
-import { keccak256, type ByteArray } from 'viem';
+import { keccak256 } from 'viem';
 import type { HashLockData } from '../types/chain-type';
 
 // Helper: Generate a random secret as hex string
@@ -21,7 +21,7 @@ const getMerkleRoot = (hashes: `0x${string}`[]): `0x${string}` => {
     const nextLevel: `0x${string}`[] = [];
     for (let i = 0; i < nodes.length; i += 2) {
       if (i + 1 < nodes.length) {
-        nextLevel.push(keccak256(nodes[i] + nodes[i + 1].slice(2)) as `0x${string}`);
+        nextLevel.push(keccak256(`0x${nodes[i].slice(2)}${nodes[i + 1].slice(2)}`) as `0x${string}`);
       } else {
         nextLevel.push(nodes[i]);
       }

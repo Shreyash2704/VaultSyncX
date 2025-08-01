@@ -3,19 +3,16 @@ import { useAccount, useChains, useSignTypedData, useSwitchChain } from "wagmi";
 import {
   PresetEnum,
   type ChainOption,
-  type HashLockData,
+  // type HashLockData,
   type Token,
 } from "../types/chain-type";
 import { useDebounceHook } from "./hooks";
 import { formatTokenAmount, parseTokenAmount } from "../utils/utility";
 import {
-  apikey,
   buildOrderByQuote,
   checkOrderConfirmed,
   getBalance,
   getQuote,
-  getQuoteData,
-  getSupportedTokens,
   getTokenPrice,
   submitOrder,
   submitOrderSecret,
@@ -42,11 +39,9 @@ export const useBridgeHooks = () => {
   const debouncedAmount = useDebounceHook(fromAmount, 1000);
   const [tokenPriceUsd, settokenPriceUsd] = useState("");
   const [toTokenPriceUsd, settoTokenPriceUsd] = useState("")
-  const [balance, setBalance] = useState("");
   const [quoteError, setquoteError] = useState("")
 
   const [transactionStep, setTransactionStep] = useState<TransactionStep>('signed');
-  const [transactionHash, setTransactionHash] = useState<string>('');
   const [transactionError, setTransactionError] = useState<string>('');
   const [showTransactionStatus, setShowTransactionStatus] = useState(false);
 
@@ -59,46 +54,16 @@ export const useBridgeHooks = () => {
 
   const [txData, settxData] = useState<any>(null);
 
-  const { generateSecrets, getHashLock, hashSecret, getMerkleRoot } =
+  const { generateSecrets} =
     useHashLockHook();
 
   const { address } = useAccount();
 
-   // Fetch tokens for fromChain
-  const {
-    data: fromTokensData,
-    isLoading: fromTokensLoading,
-    error: fromTokensError,
-  } = useQuery({
-    queryKey: ["supportedTokens", fromChain?.id],
-    queryFn: async () => {
-      if (!fromChain?.id) return {};
-      return await getSupportedTokens(fromChain.id);
-    },
-    enabled: !!fromChain?.id,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
-
-   // Fetch tokens for toChain
-  const {
-    data: toTokensData,
-    isLoading: toTokensLoading,
-    error: toTokensError,
-  } = useQuery({
-    queryKey: ["supportedTokens", toChain?.id],
-    queryFn: async () => {
-      return
-      // if (!toChain?.id) return {};
-      // return await getSupportedTokens(toChain.id);
-    },
-    enabled: !!toChain?.id,
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-  });
 
   const {
     data: balanceData,
-    isLoading: balanceLoading,
-    refetch: refetchBalance,
+    // isLoading: balanceLoading,
+    // refetch: refetchBalance,
   } = useQuery({
     queryKey: ["balance", address, fromChain?.id],
     queryFn: async () => {
@@ -392,11 +357,7 @@ export const useBridgeHooks = () => {
     swappedUsdValue,
     handleFromTokenChange,
     handleToTokenChange,
-    fromTokensLoading, // Loading states for UI
-    toTokensLoading,
-    fromTokensError, // Error states for UI
     transactionStep,
-    transactionHash,
     transactionError,
     showTransactionStatus, 
     setShowTransactionStatus

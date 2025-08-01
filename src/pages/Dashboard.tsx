@@ -1,13 +1,10 @@
-import React, { useContext, useEffect, useState } from 'react';
-import Navbar from '../components/Navbar';
-import { WalletContext } from '../context/WalletContext';
-import { useAppKit, useAppKitAccount, useDisconnect } from '@reown/appkit/react';
-import { getPortfolio, getSupportedChains } from '../utils/api-methods';
+import React, { useEffect, useState } from 'react';
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
+import { getSupportedChains } from '../utils/api-methods';
 import { useQuery } from '@tanstack/react-query';
-import { useAccount } from 'wagmi';
 import { getAggregatedPortfolio } from '../utils/portfolio-aggregator';
 import { aggregatorToken } from '../utils/token-aggregator';
-import { tokenBalanceToUSD } from '../utils/utility';
+import { formatTokenAmount, tokenBalanceToUSD } from '../utils/utility';
 import { useUserBalances } from '../hooks/use-user-balances';
 import { AiFillWallet } from 'react-icons/ai';
 import { FiCopy, FiExternalLink, FiRefreshCw } from 'react-icons/fi';
@@ -49,17 +46,14 @@ const SUPPORTED_CHAINS = [
 
 const Dashboard: React.FC = () => {
   // const { walletConnected, loading, connectWallet } = useContext(WalletContext);
-  const { open, close } = useAppKit();
-  const { address, isConnected, caipAddress, status, embeddedWalletInfo } =
+  const { open } = useAppKit();
+  const { address, isConnected } =
   useAppKitAccount();
   // const {chain, isConnected: isChainConnected} = useAccount();
 
-  
-  const [fetchingData, setfetchingData] = useState(false)
     const {
       balances,
       loading,
-      error:tokenBalanceError,
       selectedChain,
       setSelectedChain,
     } = useUserBalances();
@@ -67,13 +61,11 @@ const Dashboard: React.FC = () => {
 
   
 
-  const chainIds = [1, 8453, 42161]; // Example chain IDs
+  const chainIds = [1, 8453, 42161, 137]; // Example chain IDs
 
 const {
   data: aggregatedPortfolio,
-  isLoading,
-  error,
-  refetch,
+  isLoading: fetchingData,
 } = useQuery({
   queryKey: ['aggregatedPortfolio', address, chainIds],
   queryFn: () => getAggregatedPortfolio(address, chainIds),
@@ -82,9 +74,9 @@ const {
 });
 const {
   data: aggregatedTokens,
-  isLoading: tokensLoading,
-  error: tokensError,
-  refetch: refetchTokens,
+  // isLoading: tokensLoading,
+  // error: tokensError,
+  // refetch: refetchTokens,
 } = useQuery({
   queryKey: ['aggregatedTokens', address, chainIds],
   queryFn: () => aggregatorToken(address, chainIds),
@@ -406,7 +398,7 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
                 <tr>
                   <th className="px-4 py-2 font-semibold">Token</th>
                   <th className="px-4 py-2 font-semibold">Symbol</th>
-                  {/* <th className="px-4 py-2 font-semibold">Balance</th> */}
+                  <th className="px-4 py-2 font-semibold">Balance</th>
                   <th className="px-4 py-2 font-semibold">USD Value</th>
                   {/* <th className="px-4 py-2 font-semibold">Address</th> */}
                   {/* <th className="px-4 py-2 font-semibold">Chain</th> */}
@@ -423,7 +415,7 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
                         {token.name}
                       </td>
                       <td className="px-4 py-2">{token.symbol}</td>
-                      {/* <td className="px-4 py-2">{Number(token.balance).toLocaleString(undefined, { maximumFractionDigits: 6 })}</td> */}
+                      <td className="px-4 py-2">{formatTokenAmount(token.balance, token.decimals,6)}</td>
                       <td className="px-4 py-2">
                         {/* USD Value: async call, so you may want to use a state or a child component for each row */}
                         <TokenUSDValue token={token} />
