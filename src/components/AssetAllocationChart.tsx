@@ -68,8 +68,6 @@ const AssetAllocationChart: React.FC<AssetAllocationChartProps> = ({
         symbol: token.symbol
       })});
 
-      console.log('Token Values:', tokenValues,aggregatedTokens);
-
       // Sort by value and take top 8 tokens
       const sortedTokens = tokenValues
         .sort((a, b) => b.value - a.value)

@@ -103,10 +103,15 @@ export const getQuote = async(paramsData:QuoteDataType) =>{
 
       try {
         const response = await axios.get(url, config);
-        console.log(response.data);
+        if(response.data.statusCode === 400){
+          return {
+            status: "error",
+            data:response?.data
+          }
+        }
         return {
             status: "success",
-            data:response.data
+            data:response.data,
           }
       } catch (error) {
         console.error(error);

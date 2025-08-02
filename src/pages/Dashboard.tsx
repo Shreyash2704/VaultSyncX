@@ -58,7 +58,7 @@ const Dashboard: React.FC = () => {
       selectedChain,
       setSelectedChain,
     } = useUserBalances();
-    console.log("User Balances:", balances);
+    // console.log("User Balances:", balances);
 
   
 
@@ -92,7 +92,7 @@ const [copiedAddress, setCopiedAddress] = useState<string>('');
       setCopiedAddress(text);
       setTimeout(() => setCopiedAddress(''), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err);
+      // console.error('Failed to copy:', err);
     }
   };
 
@@ -114,15 +114,11 @@ const [copiedAddress, setCopiedAddress] = useState<string>('');
     return `${explorers[chainId as keyof typeof explorers] || 'https://etherscan.io'}/token/${tokenAddress}`;
   };
 
-console.log("Aggregated Portfolio:", aggregatedPortfolio);
-console.log("Aggregated Tokens:", aggregatedTokens);
-
 const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
 
   useEffect(() => {
     const fetchChainData = async () => {
       const res = await getSupportedChains()
-      console.log("Supported Chains:", res);
     }
     fetchChainData();
   },[])

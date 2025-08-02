@@ -223,9 +223,9 @@ const Swap: React.FC = () => {
           style={{
             // background: "var(--color-primary-btn-bg)",
             color: quoteError ? "red" : "var(--color-primary-btn-text)",
-            cursor: isBtnDisabled ? "not-allowed" : "pointer",
+            cursor: isBtnDisabled && address ? "not-allowed" : "pointer",
           }}
-          disabled={isBtnDisabled}
+          disabled={isBtnDisabled && !!address}
           onClick={handleSubmit}
         >
           {buttonText}
