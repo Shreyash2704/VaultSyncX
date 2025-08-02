@@ -237,10 +237,12 @@ const Swap: React.FC = () => {
         onClose={() => setShowTransactionStatus(false)}
         currentStep={transactionStep}
         errorMessage={transactionError}
-        fromToken={fromToken?.symbol}
-        toToken={toToken?.symbol}
+        fromToken={fromToken}
+        toToken={toToken}
         amount={fromAmount}
         toAmount={toAmount}
+        fromChain={fromChain}
+        toChain={toChain}
       />
     </div>
   );

@@ -304,6 +304,10 @@ export const useBridgeHooks = () => {
   useEffect(() => {
     if (checkContinuouslyForOrder && txData.order?.orderHash) {
       const interval = setInterval(async () => {
+        if (!showTransactionStatus) {
+          clearInterval(interval);
+          return;
+        }
         const orderStatus = await checkOrderConfirmed(txData.order?.orderHash);
         if (orderStatus.fills.length > 0) {
           setTransactionStep('placed')
@@ -314,7 +318,7 @@ export const useBridgeHooks = () => {
       }, 5000);
       return () => clearInterval(interval);
     }
-  }, [checkContinuouslyForOrder,txData]);
+  }, [checkContinuouslyForOrder,txData,showTransactionStatus]);
 
   return {
     fromChain,

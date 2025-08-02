@@ -1,5 +1,6 @@
 import React from 'react';
 import { X, CheckCircle, Clock, AlertCircle, Loader2 } from 'lucide-react';
+import type { Token } from '../types/chain-type';
 
 export type TransactionStep = 'processing' | 'signed' | 'submitted' | 'placed' | 'confirmed' | 'error';
 
@@ -8,10 +9,12 @@ interface TransactionStatusProps {
   onClose: () => void;
   currentStep: TransactionStep;
   errorMessage?: string;
-  fromToken?: string;
-  toToken?: string;
+  fromToken?: Token | null;
+  toToken?: Token | null;
   amount?: string;
   toAmount?: string;
+  fromChain?:any;
+  toChain?:any;
 }
 
 const TransactionStatus: React.FC<TransactionStatusProps> = ({
@@ -19,10 +22,12 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
   onClose,
   currentStep,
   errorMessage,
-  fromToken = 'TOKEN',
-  toToken = 'TOKEN',
+  fromToken,
+  toToken,
   amount = '0',
-  toAmount = '0'
+  toAmount = '0',
+  fromChain,
+  toChain
 }) => {
   if (!isOpen) return null;
 
@@ -164,7 +169,9 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
               className="text-lg font-semibold"
               style={{ color: 'var(--color-font)' }}
             >
-              {amount} {fromToken} → {toAmount} {toToken}
+              {amount} {fromToken?.symbol} {" "}<img src={fromChain?.logo} alt={fromToken?.symbol} className="inline-block w-4 h-4 mr-1" />
+                → {toAmount}  {toToken?.symbol} {" "}
+              <img src={toChain?.logo} alt={toToken?.symbol} className="inline-block w-4 h-4 mr-1" /> 
             </div>
           </div>
         </div>
@@ -172,7 +179,7 @@ const TransactionStatus: React.FC<TransactionStatusProps> = ({
         {/* Error Message */}
         {isError && errorMessage && (
           <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 overflow-scroll">
               <AlertCircle className="w-5 h-5 text-red-500" />
               <div>
                 <div className="font-medium text-red-800 dark:text-red-200">Error</div>

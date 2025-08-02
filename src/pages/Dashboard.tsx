@@ -8,6 +8,7 @@ import { formatTokenAmount, tokenBalanceToUSD } from '../utils/utility';
 import { useUserBalances } from '../hooks/use-user-balances';
 import { AiFillWallet } from 'react-icons/ai';
 import { FiCopy, FiExternalLink, FiRefreshCw } from 'react-icons/fi';
+import AllocationTabs from '../components/AllocationTabs';
 
 
 declare global {
@@ -376,20 +377,12 @@ const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
             )}
         </div>
 
-        <div className="bg-[var(--color-component)] rounded-lg p-6 mb-8">
-          <div className="text-lg font-semibold mb-2">Portfolio Overview</div>
-          <div className="text-2xl font-bold mb-1">${portfolioValue}</div>
-          <div className="text-green-400 text-sm mb-4">Last 30 Days: +1.0%</div>
-          {/* Placeholder for chart */}
-          <div className="w-full h-32 bg-[var(--color-table-header)] rounded mb-2 flex items-center justify-center text-gray-400">[Chart]</div>
-        </div>
-        <div className="bg-[var(--color-component)] rounded-lg p-6 mb-8">
-          <div className="text-lg font-semibold mb-2">Asset Allocation</div>
-          <div className="text-2xl font-bold mb-1">100%</div>
-          <div className="text-green-400 text-sm mb-4">Current: +0.5%</div>
-          {/* Placeholder for bar chart */}
-          <div className="w-full h-24 bg-[var(--color-table-header)] rounded flex items-center justify-center text-gray-400">[Bar Chart]</div>
-        </div>
+       
+        
+        <AllocationTabs
+          aggregatedTokens={aggregatedTokens}
+          aggregatedPortfolio={aggregatedPortfolio}
+        />
         <div className="bg-[var(--color-component)] rounded-lg p-6 mb-8">
           <div className="text-lg font-semibold mb-4">Aggregated Token Holdings</div>
           <div className="overflow-x-auto">

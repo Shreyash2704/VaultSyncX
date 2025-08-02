@@ -5,6 +5,10 @@ import { arbitrum, mainnet, base, polygon, type AppKitNetwork } from '@reown/app
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import ChainConfig from '../config/chain-config.json'
+import Ethlogo from '../assets/etherum_2.svg'
+import baseLogo from '../assets/base.svg'
+import arbitrumLogo from '../assets/arbitrum.svg'
+import polygonLogo from '../assets/polygon.svg'
 
 // 0. Setup queryClient
 const queryClient = new QueryClient()
@@ -24,19 +28,23 @@ const metadata = {
 const networks: [AppKitNetwork, ...AppKitNetwork[]] = [
   {
     ...mainnet,
-    ...ChainConfig.ethereum
+    ...ChainConfig.ethereum,
+    logo:Ethlogo
   } as AppKitNetwork, 
   {
     ...arbitrum,
-    ...ChainConfig.arbitrum
+    ...ChainConfig.arbitrum,
+    logo:arbitrumLogo
   } as AppKitNetwork,
   {
     ...base,
-    ...ChainConfig.base
+    ...ChainConfig.base,
+    logo:baseLogo
   } as AppKitNetwork,
   {
     ...polygon,
-    ...ChainConfig.polygon
+    ...ChainConfig.polygon,
+    logo:polygonLogo
   } as AppKitNetwork
 ]
 

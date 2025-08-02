@@ -6,6 +6,7 @@ export type Token = {
   address: string;
   symbol: string;
   decimals: number;
+  logo?: string; // Optional logo URL for the token
 };
 
 export type ChainOption = Chain & {
