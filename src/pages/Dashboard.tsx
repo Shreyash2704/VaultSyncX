@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react';
-import { getSupportedChains } from '../utils/api-methods';
 import { useQuery } from '@tanstack/react-query';
 import { getAggregatedPortfolio } from '../utils/portfolio-aggregator';
 import { aggregatorToken } from '../utils/token-aggregator';
@@ -116,12 +115,6 @@ const [copiedAddress, setCopiedAddress] = useState<string>('');
 
 const portfolioValue = aggregatedPortfolio?.total.toFixed(4)
 
-  useEffect(() => {
-    const fetchChainData = async () => {
-      const res = await getSupportedChains()
-    }
-    fetchChainData();
-  },[])
 
   
 
